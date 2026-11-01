@@ -1,0 +1,29 @@
+id = "local.herdr-web"
+name = "Herdr Web"
+version = "0.1.0"
+min_herdr_version = "0.9.5"
+description = "Use the Herdr desktop interface in a local browser."
+platforms = ["linux"]
+
+[[build]]
+command = ["./build.sh"]
+
+[[actions]]
+id = "start"
+title = "Start web interface"
+command = ["./target/release/herdr-web", "plugin", "start"]
+
+[[actions]]
+id = "stop"
+title = "Stop web interface"
+command = ["./target/release/herdr-web", "plugin", "stop"]
+
+[[actions]]
+id = "restart"
+title = "Restart web interface"
+command = ["./target/release/herdr-web", "plugin", "restart"]
+
+[[actions]]
+id = "status"
+title = "Web interface status"
+command = ["./target/release/herdr-web", "plugin", "status"]

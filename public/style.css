@@ -1,0 +1,51 @@
+:root { color-scheme: dark; font: 13px/1.4 Geist, sans-serif; background: #17191d; color: #eeeeef; }
+* { box-sizing: border-box; }
+div { border:0 solid transparent; }
+html,body { margin: 0; width:100%; height:100%; overflow:hidden; }
+@font-face{font-family:Geist;src:url('/desktop/fonts/Geist.ttf') format('truetype');font-weight:100 900;font-display:block;}
+@font-face{font-family:'JetBrains Mono';src:url('/desktop/fonts/JetBrainsMono-Variable.ttf') format('truetype');font-weight:100 900;font-display:block;}
+@font-face{font-family:'JetBrains Mono';src:url('/desktop/fonts/JetBrainsMono-Italic-Variable.ttf') format('truetype');font-weight:100 900;font-style:italic;font-display:block;}
+@font-face{font-family:'Geist Mono';src:url('/desktop/fonts/GeistMono-Variable.ttf') format('truetype');font-weight:100 900;}
+@font-face{font-family:'Geist Mono';src:url('/desktop/fonts/GeistMono-Italic-Variable.ttf') format('truetype');font-weight:100 900;font-style:italic;}
+@font-face{font-family:'Symbols Nerd Font';src:url('/desktop/fonts/SymbolsNerdFont-Regular.ttf') format('truetype');}
+@font-face{font-family:'Pixelated MS Sans Serif';src:url('/desktop/mods/win98/fonts/PixelatedMSSansSerif-Regular.ttf') format('truetype');}
+@font-face{font-family:'Pixelated MS Sans Serif';src:url('/desktop/mods/win98/fonts/PixelatedMSSansSerif-Bold.ttf') format('truetype');font-weight:700;}
+@font-face{font-family:'PxPlus IBM VGA 8x16';src:url('/desktop/mods/win98/fonts/PxPlus_IBM_VGA_8x16.ttf') format('truetype');}
+#app { display:flex;height:calc(100% - 25px);width:100%;overflow:hidden;background:var(--canvas); }
+.layout-node { border:0 solid transparent; }
+.layout-node[hidden]{display:none!important;}
+.layout-node > [id] { min-width:0;min-height:0; }
+#web-tools { height:25px;display:flex;gap:12px;align-items:center;padding:0 10px;font-size:11px;background:var(--chrome);color:var(--muted);border-top:1px solid var(--border); }
+#connection{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#ffc078;}
+button{cursor:pointer;font:inherit;border:1px solid var(--border,#555);border-radius:4px;padding:2px 8px;background:var(--raised,#333);color:inherit;}
+.terminal-content{position:relative;flex:1;min-width:0;min-height:0;width:100%;height:100%;}
+.terminal-pane{position:absolute;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;border:1px solid var(--border);background:var(--background);}
+.pane-header{flex:none;min-width:0;}
+.terminal-pane[data-reveal="hover"]:not(:hover)>.pane-header,.terminal-pane[data-reveal="focus"]:not(.focused)>.pane-header{height:0!important;overflow:hidden;}
+.terminal-viewport{position:relative;flex:1;min-height:0;min-width:0;padding:6px 8px;overflow:hidden;}
+.terminal-status{position:absolute;bottom:8px;left:8px;right:8px;background:#272a30ed;color:#ffcd85;padding:8px;z-index:30;font-size:12px;}
+.terminal-status[hidden]{display:none;}
+.split-divider{position:absolute;z-index:15;touch-action:none;}
+.split-divider.vertical{cursor:col-resize;transform:translateX(-4px);}
+.split-divider.horizontal{cursor:row-resize;transform:translateY(-4px);}
+.split-divider:hover{background:var(--accent);opacity:.4;}
+.empty-session{height:100%;display:flex;align-items:center;justify-content:center;gap:16px;color:var(--muted);}
+.web-dialog{position:fixed;display:flex;flex-direction:column;z-index:9000;max-height:calc(100vh - 24px);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 20px 90px #000c;background:var(--popover);}
+.web-dialog > [id]{flex:1;min-height:0;}
+.web-window [style*="flex: 1 1 0"]{flex-basis:auto!important;}
+.web-frameless{border:0;border-radius:0;background:transparent;}
+.layout-editor{width:80vw;height:85vh;background:var(--popover);color:var(--foreground);border:1px solid var(--border);border-radius:10px;}
+.layout-editor textarea{display:block;width:100%;height:70%;margin:12px 0;font:13px 'JetBrains Mono',monospace;background:var(--background);color:var(--foreground);}
+#notifications{position:fixed;bottom:35px;right:15px;z-index:20000;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.web-toast{max-width:440px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--popover,#252830);box-shadow:0 4px 20px #0008;}
+@keyframes web-spin{to{transform:rotate(360deg);}}
+.hljs-keyword,.hljs-built_in{color:var(--ansi5)}.hljs-string{color:var(--ansi2)}.hljs-number,.hljs-literal{color:var(--ansi1)}.hljs-comment{color:var(--dim)}.hljs-title{color:var(--ansi4)}
+#status { max-width: 760px; margin: 10vh auto; padding: 24px; }
+h1 { font-size: 26px; }
+.warning { color: #ffc078; font-weight: 600; }
+code { font-family: monospace; }
+.web-popup { position: fixed; z-index: 10000; min-width: 160px; max-width: calc(100vw - 16px); border: 1px solid #666; background: #222; color: #eee; padding: 4px; box-shadow: 0 6px 20px #0008; }
+.web-popup button { display: block; width: 100%; background: transparent; color: inherit; border: 0; text-align: left; padding: 7px 12px; cursor: pointer; }
+.web-popup button:hover, .web-popup button:focus-visible { background: #444; }
+.web-preview { margin:0;padding:12px;white-space:pre;overflow:auto;user-select:text;font:12px/1.5 'JetBrains Mono',monospace; }
+.web-image-canvas { position: absolute; inset: 0; pointer-events: none; }

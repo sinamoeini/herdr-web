@@ -1,0 +1,1982 @@
+
+{
+  "desktop_commit": "3e32d75e7aa2327d7b1f89caf3d5dafd1f44f1b2",
+  "files": [
+    {
+      "source": "assets/fonts/Geist.ttf",
+      "destination": "fonts/Geist.ttf"
+    },
+    {
+      "source": "assets/fonts/GeistMono-Italic-Variable.ttf",
+      "destination": "fonts/GeistMono-Italic-Variable.ttf"
+    },
+    {
+      "source": "assets/fonts/GeistMono-Variable.ttf",
+      "destination": "fonts/GeistMono-Variable.ttf"
+    },
+    {
+      "source": "assets/fonts/JetBrainsMono-Italic-Variable.ttf",
+      "destination": "fonts/JetBrainsMono-Italic-Variable.ttf"
+    },
+    {
+      "source": "assets/fonts/JetBrainsMono-Variable.ttf",
+      "destination": "fonts/JetBrainsMono-Variable.ttf"
+    },
+    {
+      "source": "assets/fonts/LICENSE-SymbolsNerdFont.txt",
+      "destination": "fonts/LICENSE-SymbolsNerdFont.txt"
+    },
+    {
+      "source": "assets/fonts/OFL-JetBrainsMono.txt",
+      "destination": "fonts/OFL-JetBrainsMono.txt"
+    },
+    {
+      "source": "assets/fonts/OFL.txt",
+      "destination": "fonts/OFL.txt"
+    },
+    {
+      "source": "assets/fonts/SymbolsNerdFont-Regular.ttf",
+      "destination": "fonts/SymbolsNerdFont-Regular.ttf"
+    },
+    {
+      "source": "defaults/frame/palette/command.svg",
+      "destination": "frame/palette/command.svg"
+    },
+    {
+      "source": "defaults/frame/palette/main.js",
+      "destination": "frame/palette/main.js"
+    },
+    {
+      "source": "defaults/frame/palette/mod.json",
+      "destination": "frame/palette/mod.json"
+    },
+    {
+      "source": "defaults/frame/settings/bell.svg",
+      "destination": "frame/settings/bell.svg"
+    },
+    {
+      "source": "defaults/frame/settings/check.svg",
+      "destination": "frame/settings/check.svg"
+    },
+    {
+      "source": "defaults/frame/settings/main.js",
+      "destination": "frame/settings/main.js"
+    },
+    {
+      "source": "defaults/frame/settings/mod.json",
+      "destination": "frame/settings/mod.json"
+    },
+    {
+      "source": "defaults/frame/settings/palette.svg",
+      "destination": "frame/settings/palette.svg"
+    },
+    {
+      "source": "defaults/frame/settings/refresh.svg",
+      "destination": "frame/settings/refresh.svg"
+    },
+    {
+      "source": "defaults/frame/settings/release-notes.js",
+      "destination": "frame/settings/release-notes.js"
+    },
+    {
+      "source": "defaults/frame/settings/server.svg",
+      "destination": "frame/settings/server.svg"
+    },
+    {
+      "source": "defaults/frame/settings/shield.svg",
+      "destination": "frame/settings/shield.svg"
+    },
+    {
+      "source": "defaults/frame/welcome/arrow-right.svg",
+      "destination": "frame/welcome/arrow-right.svg"
+    },
+    {
+      "source": "defaults/frame/welcome/bot.svg",
+      "destination": "frame/welcome/bot.svg"
+    },
+    {
+      "source": "defaults/frame/welcome/check.svg",
+      "destination": "frame/welcome/check.svg"
+    },
+    {
+      "source": "defaults/frame/welcome/folder.svg",
+      "destination": "frame/welcome/folder.svg"
+    },
+    {
+      "source": "defaults/frame/welcome/herdr.png",
+      "destination": "frame/welcome/herdr.png"
+    },
+    {
+      "source": "defaults/frame/welcome/layers.svg",
+      "destination": "frame/welcome/layers.svg"
+    },
+    {
+      "source": "defaults/frame/welcome/main.js",
+      "destination": "frame/welcome/main.js"
+    },
+    {
+      "source": "defaults/frame/welcome/messages.svg",
+      "destination": "frame/welcome/messages.svg"
+    },
+    {
+      "source": "defaults/frame/welcome/mod.json",
+      "destination": "frame/welcome/mod.json"
+    },
+    {
+      "source": "defaults/frame/welcome/terminal.svg",
+      "destination": "frame/welcome/terminal.svg"
+    },
+    {
+      "source": "defaults/frame/whatsnew/main.js",
+      "destination": "frame/whatsnew/main.js"
+    },
+    {
+      "source": "defaults/frame/whatsnew/mod.json",
+      "destination": "frame/whatsnew/mod.json"
+    },
+    {
+      "source": "defaults/frame/whatsnew/release-notes.js",
+      "destination": "frame/whatsnew/release-notes.js"
+    },
+    {
+      "source": "defaults/icons/LICENSE-LobeHub.txt",
+      "destination": "icons/LICENSE-LobeHub.txt"
+    },
+    {
+      "source": "defaults/icons/LICENSE-Lucide.txt",
+      "destination": "icons/LICENSE-Lucide.txt"
+    },
+    {
+      "source": "defaults/icons/LICENSES.md",
+      "destination": "icons/LICENSES.md"
+    },
+    {
+      "source": "defaults/icons/agent.svg",
+      "destination": "icons/agent.svg"
+    },
+    {
+      "source": "defaults/icons/amp.svg",
+      "destination": "icons/amp.svg"
+    },
+    {
+      "source": "defaults/icons/ansible.svg",
+      "destination": "icons/ansible.svg"
+    },
+    {
+      "source": "defaults/icons/antigravity.svg",
+      "destination": "icons/antigravity.svg"
+    },
+    {
+      "source": "defaults/icons/apt.svg",
+      "destination": "icons/apt.svg"
+    },
+    {
+      "source": "defaults/icons/astro.svg",
+      "destination": "icons/astro.svg"
+    },
+    {
+      "source": "defaults/icons/biome.svg",
+      "destination": "icons/biome.svg"
+    },
+    {
+      "source": "defaults/icons/brew.svg",
+      "destination": "icons/brew.svg"
+    },
+    {
+      "source": "defaults/icons/bun.svg",
+      "destination": "icons/bun.svg"
+    },
+    {
+      "source": "defaults/icons/caddy.svg",
+      "destination": "icons/caddy.svg"
+    },
+    {
+      "source": "defaults/icons/cargo.svg",
+      "destination": "icons/cargo.svg"
+    },
+    {
+      "source": "defaults/icons/claude.svg",
+      "destination": "icons/claude.svg"
+    },
+    {
+      "source": "defaults/icons/cmake.svg",
+      "destination": "icons/cmake.svg"
+    },
+    {
+      "source": "defaults/icons/codex.svg",
+      "destination": "icons/codex.svg"
+    },
+    {
+      "source": "defaults/icons/command-code.svg",
+      "destination": "icons/command-code.svg"
+    },
+    {
+      "source": "defaults/icons/composer.svg",
+      "destination": "icons/composer.svg"
+    },
+    {
+      "source": "defaults/icons/copilot.svg",
+      "destination": "icons/copilot.svg"
+    },
+    {
+      "source": "defaults/icons/crush.svg",
+      "destination": "icons/crush.svg"
+    },
+    {
+      "source": "defaults/icons/curl.svg",
+      "destination": "icons/curl.svg"
+    },
+    {
+      "source": "defaults/icons/cursor.svg",
+      "destination": "icons/cursor.svg"
+    },
+    {
+      "source": "defaults/icons/dart.svg",
+      "destination": "icons/dart.svg"
+    },
+    {
+      "source": "defaults/icons/deno.svg",
+      "destination": "icons/deno.svg"
+    },
+    {
+      "source": "defaults/icons/django-admin.svg",
+      "destination": "icons/django-admin.svg"
+    },
+    {
+      "source": "defaults/icons/dnf.svg",
+      "destination": "icons/dnf.svg"
+    },
+    {
+      "source": "defaults/icons/docker.svg",
+      "destination": "icons/docker.svg"
+    },
+    {
+      "source": "defaults/icons/dotnet.svg",
+      "destination": "icons/dotnet.svg"
+    },
+    {
+      "source": "defaults/icons/electron.svg",
+      "destination": "icons/electron.svg"
+    },
+    {
+      "source": "defaults/icons/emacs.svg",
+      "destination": "icons/emacs.svg"
+    },
+    {
+      "source": "defaults/icons/erl.svg",
+      "destination": "icons/erl.svg"
+    },
+    {
+      "source": "defaults/icons/esbuild.svg",
+      "destination": "icons/esbuild.svg"
+    },
+    {
+      "source": "defaults/icons/eslint.svg",
+      "destination": "icons/eslint.svg"
+    },
+    {
+      "source": "defaults/icons/expo.svg",
+      "destination": "icons/expo.svg"
+    },
+    {
+      "source": "defaults/icons/fastapi.svg",
+      "destination": "icons/fastapi.svg"
+    },
+    {
+      "source": "defaults/icons/ffmpeg.svg",
+      "destination": "icons/ffmpeg.svg"
+    },
+    {
+      "source": "defaults/icons/flask.svg",
+      "destination": "icons/flask.svg"
+    },
+    {
+      "source": "defaults/icons/flutter.svg",
+      "destination": "icons/flutter.svg"
+    },
+    {
+      "source": "defaults/icons/fly.svg",
+      "destination": "icons/fly.svg"
+    },
+    {
+      "source": "defaults/icons/gcloud.svg",
+      "destination": "icons/gcloud.svg"
+    },
+    {
+      "source": "defaults/icons/gemini.svg",
+      "destination": "icons/gemini.svg"
+    },
+    {
+      "source": "defaults/icons/gh.svg",
+      "destination": "icons/gh.svg"
+    },
+    {
+      "source": "defaults/icons/ghci.svg",
+      "destination": "icons/ghci.svg"
+    },
+    {
+      "source": "defaults/icons/git.svg",
+      "destination": "icons/git.svg"
+    },
+    {
+      "source": "defaults/icons/glab.svg",
+      "destination": "icons/glab.svg"
+    },
+    {
+      "source": "defaults/icons/go.svg",
+      "destination": "icons/go.svg"
+    },
+    {
+      "source": "defaults/icons/gradle.svg",
+      "destination": "icons/gradle.svg"
+    },
+    {
+      "source": "defaults/icons/grok.svg",
+      "destination": "icons/grok.svg"
+    },
+    {
+      "source": "defaults/icons/helm.svg",
+      "destination": "icons/helm.svg"
+    },
+    {
+      "source": "defaults/icons/hermes.svg",
+      "destination": "icons/hermes.svg"
+    },
+    {
+      "source": "defaults/icons/htop.svg",
+      "destination": "icons/htop.svg"
+    },
+    {
+      "source": "defaults/icons/hx.svg",
+      "destination": "icons/hx.svg"
+    },
+    {
+      "source": "defaults/icons/iex.svg",
+      "destination": "icons/iex.svg"
+    },
+    {
+      "source": "defaults/icons/java.svg",
+      "destination": "icons/java.svg"
+    },
+    {
+      "source": "defaults/icons/jest.svg",
+      "destination": "icons/jest.svg"
+    },
+    {
+      "source": "defaults/icons/julia.svg",
+      "destination": "icons/julia.svg"
+    },
+    {
+      "source": "defaults/icons/jupyter.svg",
+      "destination": "icons/jupyter.svg"
+    },
+    {
+      "source": "defaults/icons/kimi.svg",
+      "destination": "icons/kimi.svg"
+    },
+    {
+      "source": "defaults/icons/kiro.svg",
+      "destination": "icons/kiro.svg"
+    },
+    {
+      "source": "defaults/icons/kotlin.svg",
+      "destination": "icons/kotlin.svg"
+    },
+    {
+      "source": "defaults/icons/kubectl.svg",
+      "destination": "icons/kubectl.svg"
+    },
+    {
+      "source": "defaults/icons/lazygit.svg",
+      "destination": "icons/lazygit.svg"
+    },
+    {
+      "source": "defaults/icons/less.svg",
+      "destination": "icons/less.svg"
+    },
+    {
+      "source": "defaults/icons/lua.svg",
+      "destination": "icons/lua.svg"
+    },
+    {
+      "source": "defaults/icons/make.svg",
+      "destination": "icons/make.svg"
+    },
+    {
+      "source": "defaults/icons/mastracode.svg",
+      "destination": "icons/mastracode.svg"
+    },
+    {
+      "source": "defaults/icons/mongosh.svg",
+      "destination": "icons/mongosh.svg"
+    },
+    {
+      "source": "defaults/icons/muse.svg",
+      "destination": "icons/muse.svg"
+    },
+    {
+      "source": "defaults/icons/mvn.svg",
+      "destination": "icons/mvn.svg"
+    },
+    {
+      "source": "defaults/icons/mysql.svg",
+      "destination": "icons/mysql.svg"
+    },
+    {
+      "source": "defaults/icons/nano.svg",
+      "destination": "icons/nano.svg"
+    },
+    {
+      "source": "defaults/icons/netlify.svg",
+      "destination": "icons/netlify.svg"
+    },
+    {
+      "source": "defaults/icons/next.svg",
+      "destination": "icons/next.svg"
+    },
+    {
+      "source": "defaults/icons/nginx.svg",
+      "destination": "icons/nginx.svg"
+    },
+    {
+      "source": "defaults/icons/nix.svg",
+      "destination": "icons/nix.svg"
+    },
+    {
+      "source": "defaults/icons/node.svg",
+      "destination": "icons/node.svg"
+    },
+    {
+      "source": "defaults/icons/npm.svg",
+      "destination": "icons/npm.svg"
+    },
+    {
+      "source": "defaults/icons/nuxt.svg",
+      "destination": "icons/nuxt.svg"
+    },
+    {
+      "source": "defaults/icons/nvim.svg",
+      "destination": "icons/nvim.svg"
+    },
+    {
+      "source": "defaults/icons/ocaml.svg",
+      "destination": "icons/ocaml.svg"
+    },
+    {
+      "source": "defaults/icons/ollama.svg",
+      "destination": "icons/ollama.svg"
+    },
+    {
+      "source": "defaults/icons/opencode.svg",
+      "destination": "icons/opencode.svg"
+    },
+    {
+      "source": "defaults/icons/pacman.svg",
+      "destination": "icons/pacman.svg"
+    },
+    {
+      "source": "defaults/icons/perl.svg",
+      "destination": "icons/perl.svg"
+    },
+    {
+      "source": "defaults/icons/php.svg",
+      "destination": "icons/php.svg"
+    },
+    {
+      "source": "defaults/icons/pi.svg",
+      "destination": "icons/pi.svg"
+    },
+    {
+      "source": "defaults/icons/pnpm.svg",
+      "destination": "icons/pnpm.svg"
+    },
+    {
+      "source": "defaults/icons/podman.svg",
+      "destination": "icons/podman.svg"
+    },
+    {
+      "source": "defaults/icons/poetry.svg",
+      "destination": "icons/poetry.svg"
+    },
+    {
+      "source": "defaults/icons/prettier.svg",
+      "destination": "icons/prettier.svg"
+    },
+    {
+      "source": "defaults/icons/prime-agent.svg",
+      "destination": "icons/prime-agent.svg"
+    },
+    {
+      "source": "defaults/icons/prisma.svg",
+      "destination": "icons/prisma.svg"
+    },
+    {
+      "source": "defaults/icons/program.svg",
+      "destination": "icons/program.svg"
+    },
+    {
+      "source": "defaults/icons/psql.svg",
+      "destination": "icons/psql.svg"
+    },
+    {
+      "source": "defaults/icons/pytest.svg",
+      "destination": "icons/pytest.svg"
+    },
+    {
+      "source": "defaults/icons/python.svg",
+      "destination": "icons/python.svg"
+    },
+    {
+      "source": "defaults/icons/qoder.svg",
+      "destination": "icons/qoder.svg"
+    },
+    {
+      "source": "defaults/icons/r.svg",
+      "destination": "icons/r.svg"
+    },
+    {
+      "source": "defaults/icons/redis-cli.svg",
+      "destination": "icons/redis-cli.svg"
+    },
+    {
+      "source": "defaults/icons/rg.svg",
+      "destination": "icons/rg.svg"
+    },
+    {
+      "source": "defaults/icons/ruby.svg",
+      "destination": "icons/ruby.svg"
+    },
+    {
+      "source": "defaults/icons/ruff.svg",
+      "destination": "icons/ruff.svg"
+    },
+    {
+      "source": "defaults/icons/scala.svg",
+      "destination": "icons/scala.svg"
+    },
+    {
+      "source": "defaults/icons/shell.svg",
+      "destination": "icons/shell.svg"
+    },
+    {
+      "source": "defaults/icons/sqlite3.svg",
+      "destination": "icons/sqlite3.svg"
+    },
+    {
+      "source": "defaults/icons/ssh.svg",
+      "destination": "icons/ssh.svg"
+    },
+    {
+      "source": "defaults/icons/supabase.svg",
+      "destination": "icons/supabase.svg"
+    },
+    {
+      "source": "defaults/icons/swift.svg",
+      "destination": "icons/swift.svg"
+    },
+    {
+      "source": "defaults/icons/tauri.svg",
+      "destination": "icons/tauri.svg"
+    },
+    {
+      "source": "defaults/icons/terraform.svg",
+      "destination": "icons/terraform.svg"
+    },
+    {
+      "source": "defaults/icons/tmux.svg",
+      "destination": "icons/tmux.svg"
+    },
+    {
+      "source": "defaults/icons/tsc.svg",
+      "destination": "icons/tsc.svg"
+    },
+    {
+      "source": "defaults/icons/turbo.svg",
+      "destination": "icons/turbo.svg"
+    },
+    {
+      "source": "defaults/icons/uv.svg",
+      "destination": "icons/uv.svg"
+    },
+    {
+      "source": "defaults/icons/vercel.svg",
+      "destination": "icons/vercel.svg"
+    },
+    {
+      "source": "defaults/icons/vim.svg",
+      "destination": "icons/vim.svg"
+    },
+    {
+      "source": "defaults/icons/vite.svg",
+      "destination": "icons/vite.svg"
+    },
+    {
+      "source": "defaults/icons/vitest.svg",
+      "destination": "icons/vitest.svg"
+    },
+    {
+      "source": "defaults/icons/webpack.svg",
+      "destination": "icons/webpack.svg"
+    },
+    {
+      "source": "defaults/icons/wrangler.svg",
+      "destination": "icons/wrangler.svg"
+    },
+    {
+      "source": "defaults/icons/yarn.svg",
+      "destination": "icons/yarn.svg"
+    },
+    {
+      "source": "defaults/icons/zig.svg",
+      "destination": "icons/zig.svg"
+    },
+    {
+      "source": "defaults/keys.json",
+      "destination": "keys.json"
+    },
+    {
+      "source": "defaults/keys.macos.json",
+      "destination": "keys.macos.json"
+    },
+    {
+      "source": "defaults/layouts/main.json",
+      "destination": "layouts/main.json"
+    },
+    {
+      "source": "defaults/layouts/terminals.json",
+      "destination": "layouts/terminals.json"
+    },
+    {
+      "source": "defaults/layouts/win98.json",
+      "destination": "layouts/win98.json"
+    },
+    {
+      "source": "defaults/layouts/win98.svg",
+      "destination": "layouts/win98.svg"
+    },
+    {
+      "source": "defaults/mods/agents/main.js",
+      "destination": "mods/agents/main.js"
+    },
+    {
+      "source": "defaults/mods/agents/mod.json",
+      "destination": "mods/agents/mod.json"
+    },
+    {
+      "source": "defaults/mods/changes/changes.svg",
+      "destination": "mods/changes/changes.svg"
+    },
+    {
+      "source": "defaults/mods/changes/main.js",
+      "destination": "mods/changes/main.js"
+    },
+    {
+      "source": "defaults/mods/changes/mod.json",
+      "destination": "mods/changes/mod.json"
+    },
+    {
+      "source": "defaults/mods/confirm/main.js",
+      "destination": "mods/confirm/main.js"
+    },
+    {
+      "source": "defaults/mods/confirm/mod.json",
+      "destination": "mods/confirm/mod.json"
+    },
+    {
+      "source": "defaults/mods/files/chevron-down.svg",
+      "destination": "mods/files/chevron-down.svg"
+    },
+    {
+      "source": "defaults/mods/files/chevron-right.svg",
+      "destination": "mods/files/chevron-right.svg"
+    },
+    {
+      "source": "defaults/mods/files/file.svg",
+      "destination": "mods/files/file.svg"
+    },
+    {
+      "source": "defaults/mods/files/folder.svg",
+      "destination": "mods/files/folder.svg"
+    },
+    {
+      "source": "defaults/mods/files/main.js",
+      "destination": "mods/files/main.js"
+    },
+    {
+      "source": "defaults/mods/files/mod.json",
+      "destination": "mods/files/mod.json"
+    },
+    {
+      "source": "defaults/mods/help/main.js",
+      "destination": "mods/help/main.js"
+    },
+    {
+      "source": "defaults/mods/help/mod.json",
+      "destination": "mods/help/mod.json"
+    },
+    {
+      "source": "defaults/mods/machine-add/main.js",
+      "destination": "mods/machine-add/main.js"
+    },
+    {
+      "source": "defaults/mods/machine-add/mod.json",
+      "destination": "mods/machine-add/mod.json"
+    },
+    {
+      "source": "defaults/mods/menu/main.js",
+      "destination": "mods/menu/main.js"
+    },
+    {
+      "source": "defaults/mods/menu/mod.json",
+      "destination": "mods/menu/mod.json"
+    },
+    {
+      "source": "defaults/mods/new-menu/main.js",
+      "destination": "mods/new-menu/main.js"
+    },
+    {
+      "source": "defaults/mods/new-menu/mod.json",
+      "destination": "mods/new-menu/mod.json"
+    },
+    {
+      "source": "defaults/mods/pane/close.svg",
+      "destination": "mods/pane/close.svg"
+    },
+    {
+      "source": "defaults/mods/pane/main.js",
+      "destination": "mods/pane/main.js"
+    },
+    {
+      "source": "defaults/mods/pane/mod.json",
+      "destination": "mods/pane/mod.json"
+    },
+    {
+      "source": "defaults/mods/pane/split-down.svg",
+      "destination": "mods/pane/split-down.svg"
+    },
+    {
+      "source": "defaults/mods/pane/split-right.svg",
+      "destination": "mods/pane/split-right.svg"
+    },
+    {
+      "source": "defaults/mods/pane/unzoom.svg",
+      "destination": "mods/pane/unzoom.svg"
+    },
+    {
+      "source": "defaults/mods/pane/zoom.svg",
+      "destination": "mods/pane/zoom.svg"
+    },
+    {
+      "source": "defaults/mods/peek/main.js",
+      "destination": "mods/peek/main.js"
+    },
+    {
+      "source": "defaults/mods/peek/mod.json",
+      "destination": "mods/peek/mod.json"
+    },
+    {
+      "source": "defaults/mods/picker/main.js",
+      "destination": "mods/picker/main.js"
+    },
+    {
+      "source": "defaults/mods/picker/mod.json",
+      "destination": "mods/picker/mod.json"
+    },
+    {
+      "source": "defaults/mods/prompt/main.js",
+      "destination": "mods/prompt/main.js"
+    },
+    {
+      "source": "defaults/mods/prompt/mod.json",
+      "destination": "mods/prompt/mod.json"
+    },
+    {
+      "source": "defaults/mods/spaces/main.js",
+      "destination": "mods/spaces/main.js"
+    },
+    {
+      "source": "defaults/mods/spaces/mod.json",
+      "destination": "mods/spaces/mod.json"
+    },
+    {
+      "source": "defaults/mods/tabs/main.js",
+      "destination": "mods/tabs/main.js"
+    },
+    {
+      "source": "defaults/mods/tabs/mod.json",
+      "destination": "mods/tabs/mod.json"
+    },
+    {
+      "source": "defaults/mods/terminals-bar/command.svg",
+      "destination": "mods/terminals-bar/command.svg"
+    },
+    {
+      "source": "defaults/mods/terminals-bar/main.js",
+      "destination": "mods/terminals-bar/main.js"
+    },
+    {
+      "source": "defaults/mods/terminals-bar/mod.json",
+      "destination": "mods/terminals-bar/mod.json"
+    },
+    {
+      "source": "defaults/mods/terminals-bar/plus.svg",
+      "destination": "mods/terminals-bar/plus.svg"
+    },
+    {
+      "source": "defaults/mods/terminals-bar/stack.svg",
+      "destination": "mods/terminals-bar/stack.svg"
+    },
+    {
+      "source": "defaults/mods/terminals-bar/win-close.svg",
+      "destination": "mods/terminals-bar/win-close.svg"
+    },
+    {
+      "source": "defaults/mods/terminals-bar/win-max.svg",
+      "destination": "mods/terminals-bar/win-max.svg"
+    },
+    {
+      "source": "defaults/mods/terminals-bar/win-min.svg",
+      "destination": "mods/terminals-bar/win-min.svg"
+    },
+    {
+      "source": "defaults/mods/terminals-bar/win-restore.svg",
+      "destination": "mods/terminals-bar/win-restore.svg"
+    },
+    {
+      "source": "defaults/mods/terminals-pane/main.js",
+      "destination": "mods/terminals-pane/main.js"
+    },
+    {
+      "source": "defaults/mods/terminals-pane/mod.json",
+      "destination": "mods/terminals-pane/mod.json"
+    },
+    {
+      "source": "defaults/mods/toast/main.js",
+      "destination": "mods/toast/main.js"
+    },
+    {
+      "source": "defaults/mods/toast/mod.json",
+      "destination": "mods/toast/mod.json"
+    },
+    {
+      "source": "defaults/mods/win98/art/logo.svg",
+      "destination": "mods/win98/art/logo.svg"
+    },
+    {
+      "source": "defaults/mods/win98/clippy.js",
+      "destination": "mods/win98/clippy.js"
+    },
+    {
+      "source": "defaults/mods/win98/desktop.js",
+      "destination": "mods/win98/desktop.js"
+    },
+    {
+      "source": "defaults/mods/win98/dialog.js",
+      "destination": "mods/win98/dialog.js"
+    },
+    {
+      "source": "defaults/mods/win98/fonts/LICENSE-MSSansSerif.txt",
+      "destination": "mods/win98/fonts/LICENSE-MSSansSerif.txt"
+    },
+    {
+      "source": "defaults/mods/win98/fonts/LICENSE-PxPlus.txt",
+      "destination": "mods/win98/fonts/LICENSE-PxPlus.txt"
+    },
+    {
+      "source": "defaults/mods/win98/fonts/PixelatedMSSansSerif-Bold.ttf",
+      "destination": "mods/win98/fonts/PixelatedMSSansSerif-Bold.ttf"
+    },
+    {
+      "source": "defaults/mods/win98/fonts/PixelatedMSSansSerif-Regular.ttf",
+      "destination": "mods/win98/fonts/PixelatedMSSansSerif-Regular.ttf"
+    },
+    {
+      "source": "defaults/mods/win98/fonts/PxPlus_IBM_VGA_8x16.ttf",
+      "destination": "mods/win98/fonts/PxPlus_IBM_VGA_8x16.ttf"
+    },
+    {
+      "source": "defaults/mods/win98/icons/arrow-down.svg",
+      "destination": "mods/win98/icons/arrow-down.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/arrow-right.svg",
+      "destination": "mods/win98/icons/arrow-right.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/bin-sm.svg",
+      "destination": "mods/win98/icons/bin-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/bin.svg",
+      "destination": "mods/win98/icons/bin.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/check-badge-sm.svg",
+      "destination": "mods/win98/icons/check-badge-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/check-badge-xs.svg",
+      "destination": "mods/win98/icons/check-badge-xs.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/check.svg",
+      "destination": "mods/win98/icons/check.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/clippy-sm.svg",
+      "destination": "mods/win98/icons/clippy-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/clippy.svg",
+      "destination": "mods/win98/icons/clippy.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/clock-sm.svg",
+      "destination": "mods/win98/icons/clock-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/clock.svg",
+      "destination": "mods/win98/icons/clock.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/computer-sm.svg",
+      "destination": "mods/win98/icons/computer-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/computer.svg",
+      "destination": "mods/win98/icons/computer.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/control-sm.svg",
+      "destination": "mods/win98/icons/control-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/control.svg",
+      "destination": "mods/win98/icons/control.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/ctl-close.svg",
+      "destination": "mods/win98/icons/ctl-close.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/ctl-help.svg",
+      "destination": "mods/win98/icons/ctl-help.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/ctl-max.svg",
+      "destination": "mods/win98/icons/ctl-max.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/ctl-min.svg",
+      "destination": "mods/win98/icons/ctl-min.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/ctl-restore.svg",
+      "destination": "mods/win98/icons/ctl-restore.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/display-sm.svg",
+      "destination": "mods/win98/icons/display-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/display.svg",
+      "destination": "mods/win98/icons/display.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/documents-sm.svg",
+      "destination": "mods/win98/icons/documents-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/documents.svg",
+      "destination": "mods/win98/icons/documents.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/dos-sm.svg",
+      "destination": "mods/win98/icons/dos-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/dos.svg",
+      "destination": "mods/win98/icons/dos.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/drive-sm.svg",
+      "destination": "mods/win98/icons/drive-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/drive.svg",
+      "destination": "mods/win98/icons/drive.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/error-sm.svg",
+      "destination": "mods/win98/icons/error-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/error.svg",
+      "destination": "mods/win98/icons/error.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/find-sm.svg",
+      "destination": "mods/win98/icons/find-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/find.svg",
+      "destination": "mods/win98/icons/find.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/folder-open-sm.svg",
+      "destination": "mods/win98/icons/folder-open-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/folder-open.svg",
+      "destination": "mods/win98/icons/folder-open.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/folder-sm.svg",
+      "destination": "mods/win98/icons/folder-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/folder.svg",
+      "destination": "mods/win98/icons/folder.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/help-sm.svg",
+      "destination": "mods/win98/icons/help-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/help.svg",
+      "destination": "mods/win98/icons/help.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/hourglass-sm.svg",
+      "destination": "mods/win98/icons/hourglass-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/hourglass-xs.svg",
+      "destination": "mods/win98/icons/hourglass-xs.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/info-sm.svg",
+      "destination": "mods/win98/icons/info-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/info.svg",
+      "destination": "mods/win98/icons/info.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/logoff-sm.svg",
+      "destination": "mods/win98/icons/logoff-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/logoff.svg",
+      "destination": "mods/win98/icons/logoff.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/mines-face-cool.svg",
+      "destination": "mods/win98/icons/mines-face-cool.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/mines-face-dead.svg",
+      "destination": "mods/win98/icons/mines-face-dead.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/mines-face-ooh.svg",
+      "destination": "mods/win98/icons/mines-face-ooh.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/mines-face-smile.svg",
+      "destination": "mods/win98/icons/mines-face-smile.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/mines-flag.svg",
+      "destination": "mods/win98/icons/mines-flag.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/mines-mine.svg",
+      "destination": "mods/win98/icons/mines-mine.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/mines-sm.svg",
+      "destination": "mods/win98/icons/mines-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/mines-wrong.svg",
+      "destination": "mods/win98/icons/mines-wrong.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/mines.svg",
+      "destination": "mods/win98/icons/mines.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/netdrive-sm.svg",
+      "destination": "mods/win98/icons/netdrive-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/netdrive.svg",
+      "destination": "mods/win98/icons/netdrive.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/netfolder-sm.svg",
+      "destination": "mods/win98/icons/netfolder-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/netfolder.svg",
+      "destination": "mods/win98/icons/netfolder.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/network-sm.svg",
+      "destination": "mods/win98/icons/network-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/network.svg",
+      "destination": "mods/win98/icons/network.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/printer-sm.svg",
+      "destination": "mods/win98/icons/printer-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/printer.svg",
+      "destination": "mods/win98/icons/printer.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/programs-sm.svg",
+      "destination": "mods/win98/icons/programs-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/programs.svg",
+      "destination": "mods/win98/icons/programs.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/question-sm.svg",
+      "destination": "mods/win98/icons/question-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/question.svg",
+      "destination": "mods/win98/icons/question.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/radio-off.svg",
+      "destination": "mods/win98/icons/radio-off.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/radio-on.svg",
+      "destination": "mods/win98/icons/radio-on.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/rename-sm.svg",
+      "destination": "mods/win98/icons/rename-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/rename.svg",
+      "destination": "mods/win98/icons/rename.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/run-sm.svg",
+      "destination": "mods/win98/icons/run-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/run.svg",
+      "destination": "mods/win98/icons/run.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/settings-sm.svg",
+      "destination": "mods/win98/icons/settings-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/settings.svg",
+      "destination": "mods/win98/icons/settings.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/shutdown-sm.svg",
+      "destination": "mods/win98/icons/shutdown-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/shutdown.svg",
+      "destination": "mods/win98/icons/shutdown.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/sol-club.svg",
+      "destination": "mods/win98/icons/sol-club.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/sol-diamond.svg",
+      "destination": "mods/win98/icons/sol-diamond.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/sol-heart.svg",
+      "destination": "mods/win98/icons/sol-heart.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/sol-sm.svg",
+      "destination": "mods/win98/icons/sol-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/sol-spade.svg",
+      "destination": "mods/win98/icons/sol-spade.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/sol.svg",
+      "destination": "mods/win98/icons/sol.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/speaker-mute-sm.svg",
+      "destination": "mods/win98/icons/speaker-mute-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/speaker-mute.svg",
+      "destination": "mods/win98/icons/speaker-mute.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/speaker-sm.svg",
+      "destination": "mods/win98/icons/speaker-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/speaker.svg",
+      "destination": "mods/win98/icons/speaker.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/start-sm.svg",
+      "destination": "mods/win98/icons/start-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/start.svg",
+      "destination": "mods/win98/icons/start.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/taskbar-sm.svg",
+      "destination": "mods/win98/icons/taskbar-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/taskbar.svg",
+      "destination": "mods/win98/icons/taskbar.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/taskman-sm.svg",
+      "destination": "mods/win98/icons/taskman-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/taskman.svg",
+      "destination": "mods/win98/icons/taskman.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/update-sm.svg",
+      "destination": "mods/win98/icons/update-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/update.svg",
+      "destination": "mods/win98/icons/update.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/warn-badge-sm.svg",
+      "destination": "mods/win98/icons/warn-badge-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/warn-badge-xs.svg",
+      "destination": "mods/win98/icons/warn-badge-xs.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/warning-sm.svg",
+      "destination": "mods/win98/icons/warning-sm.svg"
+    },
+    {
+      "source": "defaults/mods/win98/icons/warning.svg",
+      "destination": "mods/win98/icons/warning.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/about.png",
+      "destination": "mods/win98/img/about.png"
+    },
+    {
+      "source": "defaults/mods/win98/img/banner.png",
+      "destination": "mods/win98/img/banner.png"
+    },
+    {
+      "source": "defaults/mods/win98/img/banner@2x.png",
+      "destination": "mods/win98/img/banner@2x.png"
+    },
+    {
+      "source": "defaults/mods/win98/img/clippy.svg",
+      "destination": "mods/win98/img/clippy.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/clouds.png",
+      "destination": "mods/win98/img/clouds.png"
+    },
+    {
+      "source": "defaults/mods/win98/img/monitor.png",
+      "destination": "mods/win98/img/monitor.png"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-0-1.svg",
+      "destination": "mods/win98/img/sol-0-1.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-0-10.svg",
+      "destination": "mods/win98/img/sol-0-10.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-0-11.svg",
+      "destination": "mods/win98/img/sol-0-11.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-0-12.svg",
+      "destination": "mods/win98/img/sol-0-12.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-0-13.svg",
+      "destination": "mods/win98/img/sol-0-13.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-0-2.svg",
+      "destination": "mods/win98/img/sol-0-2.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-0-3.svg",
+      "destination": "mods/win98/img/sol-0-3.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-0-4.svg",
+      "destination": "mods/win98/img/sol-0-4.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-0-5.svg",
+      "destination": "mods/win98/img/sol-0-5.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-0-6.svg",
+      "destination": "mods/win98/img/sol-0-6.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-0-7.svg",
+      "destination": "mods/win98/img/sol-0-7.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-0-8.svg",
+      "destination": "mods/win98/img/sol-0-8.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-0-9.svg",
+      "destination": "mods/win98/img/sol-0-9.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-1-1.svg",
+      "destination": "mods/win98/img/sol-1-1.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-1-10.svg",
+      "destination": "mods/win98/img/sol-1-10.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-1-11.svg",
+      "destination": "mods/win98/img/sol-1-11.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-1-12.svg",
+      "destination": "mods/win98/img/sol-1-12.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-1-13.svg",
+      "destination": "mods/win98/img/sol-1-13.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-1-2.svg",
+      "destination": "mods/win98/img/sol-1-2.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-1-3.svg",
+      "destination": "mods/win98/img/sol-1-3.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-1-4.svg",
+      "destination": "mods/win98/img/sol-1-4.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-1-5.svg",
+      "destination": "mods/win98/img/sol-1-5.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-1-6.svg",
+      "destination": "mods/win98/img/sol-1-6.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-1-7.svg",
+      "destination": "mods/win98/img/sol-1-7.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-1-8.svg",
+      "destination": "mods/win98/img/sol-1-8.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-1-9.svg",
+      "destination": "mods/win98/img/sol-1-9.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-2-1.svg",
+      "destination": "mods/win98/img/sol-2-1.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-2-10.svg",
+      "destination": "mods/win98/img/sol-2-10.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-2-11.svg",
+      "destination": "mods/win98/img/sol-2-11.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-2-12.svg",
+      "destination": "mods/win98/img/sol-2-12.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-2-13.svg",
+      "destination": "mods/win98/img/sol-2-13.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-2-2.svg",
+      "destination": "mods/win98/img/sol-2-2.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-2-3.svg",
+      "destination": "mods/win98/img/sol-2-3.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-2-4.svg",
+      "destination": "mods/win98/img/sol-2-4.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-2-5.svg",
+      "destination": "mods/win98/img/sol-2-5.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-2-6.svg",
+      "destination": "mods/win98/img/sol-2-6.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-2-7.svg",
+      "destination": "mods/win98/img/sol-2-7.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-2-8.svg",
+      "destination": "mods/win98/img/sol-2-8.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-2-9.svg",
+      "destination": "mods/win98/img/sol-2-9.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-3-1.svg",
+      "destination": "mods/win98/img/sol-3-1.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-3-10.svg",
+      "destination": "mods/win98/img/sol-3-10.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-3-11.svg",
+      "destination": "mods/win98/img/sol-3-11.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-3-12.svg",
+      "destination": "mods/win98/img/sol-3-12.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-3-13.svg",
+      "destination": "mods/win98/img/sol-3-13.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-3-2.svg",
+      "destination": "mods/win98/img/sol-3-2.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-3-3.svg",
+      "destination": "mods/win98/img/sol-3-3.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-3-4.svg",
+      "destination": "mods/win98/img/sol-3-4.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-3-5.svg",
+      "destination": "mods/win98/img/sol-3-5.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-3-6.svg",
+      "destination": "mods/win98/img/sol-3-6.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-3-7.svg",
+      "destination": "mods/win98/img/sol-3-7.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-3-8.svg",
+      "destination": "mods/win98/img/sol-3-8.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-3-9.svg",
+      "destination": "mods/win98/img/sol-3-9.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-back-0.svg",
+      "destination": "mods/win98/img/sol-back-0.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-back-1.svg",
+      "destination": "mods/win98/img/sol-back-1.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-0-1.svg",
+      "destination": "mods/win98/img/sol-select-0-1.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-0-10.svg",
+      "destination": "mods/win98/img/sol-select-0-10.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-0-11.svg",
+      "destination": "mods/win98/img/sol-select-0-11.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-0-12.svg",
+      "destination": "mods/win98/img/sol-select-0-12.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-0-13.svg",
+      "destination": "mods/win98/img/sol-select-0-13.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-0-2.svg",
+      "destination": "mods/win98/img/sol-select-0-2.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-0-3.svg",
+      "destination": "mods/win98/img/sol-select-0-3.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-0-4.svg",
+      "destination": "mods/win98/img/sol-select-0-4.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-0-5.svg",
+      "destination": "mods/win98/img/sol-select-0-5.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-0-6.svg",
+      "destination": "mods/win98/img/sol-select-0-6.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-0-7.svg",
+      "destination": "mods/win98/img/sol-select-0-7.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-0-8.svg",
+      "destination": "mods/win98/img/sol-select-0-8.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-0-9.svg",
+      "destination": "mods/win98/img/sol-select-0-9.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-1-1.svg",
+      "destination": "mods/win98/img/sol-select-1-1.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-1-10.svg",
+      "destination": "mods/win98/img/sol-select-1-10.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-1-11.svg",
+      "destination": "mods/win98/img/sol-select-1-11.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-1-12.svg",
+      "destination": "mods/win98/img/sol-select-1-12.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-1-13.svg",
+      "destination": "mods/win98/img/sol-select-1-13.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-1-2.svg",
+      "destination": "mods/win98/img/sol-select-1-2.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-1-3.svg",
+      "destination": "mods/win98/img/sol-select-1-3.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-1-4.svg",
+      "destination": "mods/win98/img/sol-select-1-4.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-1-5.svg",
+      "destination": "mods/win98/img/sol-select-1-5.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-1-6.svg",
+      "destination": "mods/win98/img/sol-select-1-6.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-1-7.svg",
+      "destination": "mods/win98/img/sol-select-1-7.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-1-8.svg",
+      "destination": "mods/win98/img/sol-select-1-8.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-1-9.svg",
+      "destination": "mods/win98/img/sol-select-1-9.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-2-1.svg",
+      "destination": "mods/win98/img/sol-select-2-1.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-2-10.svg",
+      "destination": "mods/win98/img/sol-select-2-10.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-2-11.svg",
+      "destination": "mods/win98/img/sol-select-2-11.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-2-12.svg",
+      "destination": "mods/win98/img/sol-select-2-12.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-2-13.svg",
+      "destination": "mods/win98/img/sol-select-2-13.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-2-2.svg",
+      "destination": "mods/win98/img/sol-select-2-2.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-2-3.svg",
+      "destination": "mods/win98/img/sol-select-2-3.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-2-4.svg",
+      "destination": "mods/win98/img/sol-select-2-4.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-2-5.svg",
+      "destination": "mods/win98/img/sol-select-2-5.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-2-6.svg",
+      "destination": "mods/win98/img/sol-select-2-6.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-2-7.svg",
+      "destination": "mods/win98/img/sol-select-2-7.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-2-8.svg",
+      "destination": "mods/win98/img/sol-select-2-8.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-2-9.svg",
+      "destination": "mods/win98/img/sol-select-2-9.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-3-1.svg",
+      "destination": "mods/win98/img/sol-select-3-1.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-3-10.svg",
+      "destination": "mods/win98/img/sol-select-3-10.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-3-11.svg",
+      "destination": "mods/win98/img/sol-select-3-11.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-3-12.svg",
+      "destination": "mods/win98/img/sol-select-3-12.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-3-13.svg",
+      "destination": "mods/win98/img/sol-select-3-13.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-3-2.svg",
+      "destination": "mods/win98/img/sol-select-3-2.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-3-3.svg",
+      "destination": "mods/win98/img/sol-select-3-3.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-3-4.svg",
+      "destination": "mods/win98/img/sol-select-3-4.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-3-5.svg",
+      "destination": "mods/win98/img/sol-select-3-5.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-3-6.svg",
+      "destination": "mods/win98/img/sol-select-3-6.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-3-7.svg",
+      "destination": "mods/win98/img/sol-select-3-7.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-3-8.svg",
+      "destination": "mods/win98/img/sol-select-3-8.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/sol-select-3-9.svg",
+      "destination": "mods/win98/img/sol-select-3-9.svg"
+    },
+    {
+      "source": "defaults/mods/win98/img/splash.png",
+      "destination": "mods/win98/img/splash.png"
+    },
+    {
+      "source": "defaults/mods/win98/kit.js",
+      "destination": "mods/win98/kit.js"
+    },
+    {
+      "source": "defaults/mods/win98/main.js",
+      "destination": "mods/win98/main.js"
+    },
+    {
+      "source": "defaults/mods/win98/menu.js",
+      "destination": "mods/win98/menu.js"
+    },
+    {
+      "source": "defaults/mods/win98/mines.js",
+      "destination": "mods/win98/mines.js"
+    },
+    {
+      "source": "defaults/mods/win98/mod.json",
+      "destination": "mods/win98/mod.json"
+    },
+    {
+      "source": "defaults/mods/win98/sol.js",
+      "destination": "mods/win98/sol.js"
+    },
+    {
+      "source": "defaults/mods/win98/sounds/chord.mp3",
+      "destination": "mods/win98/sounds/chord.mp3"
+    },
+    {
+      "source": "defaults/mods/win98/sounds/clippy.mp3",
+      "destination": "mods/win98/sounds/clippy.mp3"
+    },
+    {
+      "source": "defaults/mods/win98/sounds/ding.mp3",
+      "destination": "mods/win98/sounds/ding.mp3"
+    },
+    {
+      "source": "defaults/mods/win98/sounds/menu.mp3",
+      "destination": "mods/win98/sounds/menu.mp3"
+    },
+    {
+      "source": "defaults/mods/win98/sounds/mines-boom.mp3",
+      "destination": "mods/win98/sounds/mines-boom.mp3"
+    },
+    {
+      "source": "defaults/mods/win98/sounds/recycle.mp3",
+      "destination": "mods/win98/sounds/recycle.mp3"
+    },
+    {
+      "source": "defaults/mods/win98/sounds/shutdown.mp3",
+      "destination": "mods/win98/sounds/shutdown.mp3"
+    },
+    {
+      "source": "defaults/mods/win98/sounds/start.mp3",
+      "destination": "mods/win98/sounds/start.mp3"
+    },
+    {
+      "source": "defaults/mods/win98/sounds/startup.mp3",
+      "destination": "mods/win98/sounds/startup.mp3"
+    },
+    {
+      "source": "defaults/mods/win98/sounds/tada.mp3",
+      "destination": "mods/win98/sounds/tada.mp3"
+    },
+    {
+      "source": "defaults/mods/win98/taskbar.js",
+      "destination": "mods/win98/taskbar.js"
+    },
+    {
+      "source": "defaults/mods/win98/window.js",
+      "destination": "mods/win98/window.js"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/archive.svg",
+      "destination": "mods/workspace-chrome/archive.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/branch.svg",
+      "destination": "mods/workspace-chrome/branch.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/check.svg",
+      "destination": "mods/workspace-chrome/check.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/chevron-down.svg",
+      "destination": "mods/workspace-chrome/chevron-down.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/chevron-left.svg",
+      "destination": "mods/workspace-chrome/chevron-left.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/chevron-right.svg",
+      "destination": "mods/workspace-chrome/chevron-right.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/circle-check.svg",
+      "destination": "mods/workspace-chrome/circle-check.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/clock.svg",
+      "destination": "mods/workspace-chrome/clock.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/file-text.svg",
+      "destination": "mods/workspace-chrome/file-text.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/files.svg",
+      "destination": "mods/workspace-chrome/files.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/folder-plus.svg",
+      "destination": "mods/workspace-chrome/folder-plus.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/folder.svg",
+      "destination": "mods/workspace-chrome/folder.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/git-branch.svg",
+      "destination": "mods/workspace-chrome/git-branch.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/git-compare.svg",
+      "destination": "mods/workspace-chrome/git-compare.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/layers.svg",
+      "destination": "mods/workspace-chrome/layers.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/main.js",
+      "destination": "mods/workspace-chrome/main.js"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/minus.svg",
+      "destination": "mods/workspace-chrome/minus.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/mod.json",
+      "destination": "mods/workspace-chrome/mod.json"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/monitor.svg",
+      "destination": "mods/workspace-chrome/monitor.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/panel-left.svg",
+      "destination": "mods/workspace-chrome/panel-left.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/panel-right.svg",
+      "destination": "mods/workspace-chrome/panel-right.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/pin-off.svg",
+      "destination": "mods/workspace-chrome/pin-off.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/pin.svg",
+      "destination": "mods/workspace-chrome/pin.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/plus.svg",
+      "destination": "mods/workspace-chrome/plus.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/search.svg",
+      "destination": "mods/workspace-chrome/search.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/server.svg",
+      "destination": "mods/workspace-chrome/server.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/settings.svg",
+      "destination": "mods/workspace-chrome/settings.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/sidebar.svg",
+      "destination": "mods/workspace-chrome/sidebar.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/spinner.svg",
+      "destination": "mods/workspace-chrome/spinner.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/square-pen.svg",
+      "destination": "mods/workspace-chrome/square-pen.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/square.svg",
+      "destination": "mods/workspace-chrome/square.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/terminal.svg",
+      "destination": "mods/workspace-chrome/terminal.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-chrome/x.svg",
+      "destination": "mods/workspace-chrome/x.svg"
+    },
+    {
+      "source": "defaults/mods/workspace-status/main.js",
+      "destination": "mods/workspace-status/main.js"
+    },
+    {
+      "source": "defaults/mods/workspace-status/mod.json",
+      "destination": "mods/workspace-status/mod.json"
+    },
+    {
+      "source": "defaults/mods/worktree/main.js",
+      "destination": "mods/worktree/main.js"
+    },
+    {
+      "source": "defaults/mods/worktree/mod.json",
+      "destination": "mods/worktree/mod.json"
+    },
+    {
+      "source": "defaults/programs.json",
+      "destination": "programs.json"
+    },
+    {
+      "source": "defaults/themes/atom-one-dark.json",
+      "destination": "themes/atom-one-dark.json"
+    },
+    {
+      "source": "defaults/themes/win98.json",
+      "destination": "themes/win98.json"
+    },
+    {
+      "source": "licenses/CC-BY-SA-3.0.txt",
+      "destination": "licenses/CC-BY-SA-3.0.txt"
+    },
+    {
+      "source": "assets/sounds/done.mp3",
+      "destination": "sounds/done.mp3"
+    },
+    {
+      "source": "assets/sounds/request.mp3",
+      "destination": "sounds/request.mp3"
+    }
+  ]
+}
