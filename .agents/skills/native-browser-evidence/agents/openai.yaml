@@ -1,0 +1,4 @@
+interface:
+  display_name: "Native Browser Evidence"
+  short_description: "Test real clipboard, terminal and lifecycle behavior"
+  default_prompt: "Use $native-browser-evidence to build meaningful acceptance evidence for this browser behavior."

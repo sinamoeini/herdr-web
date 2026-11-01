@@ -7,7 +7,7 @@ import pathlib
 import subprocess
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-EXCLUDED = {".git", "target", "test-results", ".venv", "__pycache__", "artifacts"}
+EXCLUDED = {".git", "target", "test-results", ".venv", "__pycache__", "artifacts", "dist", "personal", "private"}
 
 
 def files(root, exclude=()):

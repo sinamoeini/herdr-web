@@ -1,0 +1,4 @@
+interface:
+  display_name: "Safe Devbox Promotion"
+  short_description: "Promote tested binaries without disturbing backends"
+  default_prompt: "Use $safe-devbox-promotion to validate and safely activate this candidate on the selected development host."

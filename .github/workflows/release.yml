@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Linux x86_64 draft release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Validate tag and manifest versions
+        run: |
+          python3 -c 'import os; from tools.package_release import plugin_manifest, ROOT; plugin_manifest(ROOT, os.environ["GITHUB_REF_NAME"])'
+      - name: Run local checks
+        run: |
+          python3 -m unittest discover -s test -p 'test_*.py' -v
+          python3 test/plugin.py --manifest-only
+          sh -n build.sh
+          sh -n tools/install.sh
+      - name: Install pinned Rust toolchain
+        run: rustup show active-toolchain
+      - name: Run locked Rust tests
+        run: cargo test --locked --workspace
+      - name: Build release executable
+        run: ./build.sh
+      - name: Package and smoke-test executable outside checkout
+        run: |
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
+          python3 tools/package_release.py --tag "$GITHUB_REF_NAME"
+          cd dist
+          sha256sum --check SHA256SUMS
+          tar -xzf "herdr-web-$GITHUB_REF_NAME-x86_64-unknown-linux-gnu.tar.gz" -C "$RUNNER_TEMP"
+          cd "$RUNNER_TEMP/herdr-web-$GITHUB_REF_NAME-x86_64-unknown-linux-gnu"
+          ./herdr-web --help
+      - name: Create draft GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/*.tar.gz dist/SHA256SUMS \
+            --verify-tag --draft --generate-notes \
+            --title "Herdr Web $GITHUB_REF_NAME" \
+            --notes "Linux x86_64 on Ubuntu 24.04/glibc; requires original Herdr 0.9.5. Verify SHA256SUMS before extracting. The archive includes a binary-ready plugin manifest, documentation, licenses, and provenance. Review compatibility and acceptance limitations before publishing."

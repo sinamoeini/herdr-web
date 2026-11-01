@@ -1,0 +1,4 @@
+interface:
+  display_name: "Desktop DOM Adapters"
+  short_description: "Translate native panel events without browser races"
+  default_prompt: "Use $desktop-dom-adapters to preserve this desktop panel's behavior in the browser adapter."

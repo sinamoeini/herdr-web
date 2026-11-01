@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cargo Web Asset Packaging"
+  short_description: "Embed pinned web assets and notices with Cargo only"
+  default_prompt: "Use $cargo-web-asset-packaging to package this browser interface and verify its embedded asset provenance."

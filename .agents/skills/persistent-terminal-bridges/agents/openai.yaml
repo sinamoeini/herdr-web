@@ -1,0 +1,4 @@
+interface:
+  display_name: "Persistent Terminal Bridges"
+  short_description: "Preserve shells across PTY and WebSocket lifetimes"
+  default_prompt: "Use $persistent-terminal-bridges to diagnose this terminal bridge without disrupting backend-owned shells."

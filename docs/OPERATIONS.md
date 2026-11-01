@@ -6,7 +6,12 @@ No cloud provider or personal infrastructure is required.
 
 ## Installation
 
-Build before linking the native plugin:
+Release archives contain `herdr-web` and a native plugin manifest pointing at
+that executable. Verify the published checksum, extract the archive, then run
+`herdr plugin link .` from the extracted directory. Do not run `build.sh` for a
+downloaded binary release. Keep the directory available while it is linked.
+
+For a source checkout, build before linking the native plugin:
 
 ```sh
 ./build.sh
@@ -16,8 +21,8 @@ herdr plugin action invoke local.herdr-web.status
 ```
 
 For a named backend session, put `--session NAME` before `plugin` in each command.
-The manifest runs the release executable inside the linked checkout. Keep that
-checkout available while the plugin is registered.
+The source manifest runs the release executable inside the linked checkout. Keep
+that checkout available while the plugin is registered.
 
 For a standalone installation, `tools/install.sh` runs the locked Rust tests,
 builds the release, preserves any existing installed binary and process inventory
@@ -36,7 +41,8 @@ copy is separate from the native plugin's checkout executable.
 3. Save the exact active executable and launch details before replacing it.
    Coordinate a web-only restart window; do not stop Herdr or unrelated listeners.
 4. Atomically replace the appropriate executable and restart only the web plugin
-   or standalone web process. Native plugin Restart uses
+   or standalone web process. A binary archive uses `herdr-web`; a source checkout
+   uses `target/release/herdr-web`. Native plugin Restart uses
    `herdr plugin action invoke local.herdr-web.restart`.
 5. Check plugin status and HTTP availability at the reported URL. Test input in
    an isolated terminal. If validation fails, restore the saved web executable

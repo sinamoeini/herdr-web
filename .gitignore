@@ -2,6 +2,12 @@
 /.venv/
 /test-results/
 /artifacts/
+/dist/
+/personal/
+/private/
+.env
+.env.*
+!.env.example
 __pycache__/
 *.pyc
 *.log
