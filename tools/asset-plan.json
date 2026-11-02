@@ -1,6 +1,6 @@
 
 {
-  "desktop_commit": "3e32d75e7aa2327d7b1f89caf3d5dafd1f44f1b2",
+  "desktop_commit": "e12fd31866f33cb613922d0b33ea506e6f23ce3c",
   "files": [
     {
       "source": "assets/fonts/Geist.ttf",
@@ -805,6 +805,22 @@
     {
       "source": "defaults/mods/tabs/mod.json",
       "destination": "mods/tabs/mod.json"
+    },
+    {
+      "source": "defaults/mods/tabs/win-close.svg",
+      "destination": "mods/tabs/win-close.svg"
+    },
+    {
+      "source": "defaults/mods/tabs/win-max.svg",
+      "destination": "mods/tabs/win-max.svg"
+    },
+    {
+      "source": "defaults/mods/tabs/win-min.svg",
+      "destination": "mods/tabs/win-min.svg"
+    },
+    {
+      "source": "defaults/mods/tabs/win-restore.svg",
+      "destination": "mods/tabs/win-restore.svg"
     },
     {
       "source": "defaults/mods/terminals-bar/command.svg",

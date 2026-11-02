@@ -2,6 +2,22 @@
 
 **Implemented, with scoped acceptance and explicit remaining limitations.** This document summarizes recorded test results, not the status of any personal deployment. Successful suites do not establish every interaction in the implementation contract. No core requirement is reclassified outside scope merely because it lacks evidence.
 
+## Desktop asset upgrade — November 1, 2026
+
+Browser panels/assets now use Herdr app **v0.1.11**, commit
+`e12fd31866f33cb613922d0b33ea506e6f23ce3c`, rather than v0.1.9. Local macOS
+validation passes all **27** Python/JavaScriptCore tests, provenance/import
+reproducibility checks, and plugin manifest validation. Chromium **156.0.8078.4**
+and Firefox **157.0** pass `browser.py`'s adapter controls and new picker fixture
+against a static asset server, including actual keyboard selection and wheel
+scrolling. These are DOM/adapter checks, not native backend acceptance.
+
+Original Herdr **0.9.5**/public protocol **22** is unchanged. Rust/Cargo and the
+backend are not installed on this validation host, so no executable build or full
+Linux/native acceptance rerun is claimed for this upgrade. The results below
+remain historical; upstream native desktop engine fixes are not imported by the
+asset upgrade.
+
 ## Environment and evidence
 
 GitHub CI is configured to run all 12 current native acceptance suites on every

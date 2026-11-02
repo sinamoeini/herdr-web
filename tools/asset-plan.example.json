@@ -1,5 +1,5 @@
 {
-  "desktop_commit": "3e32d75e7aa2327d7b1f89caf3d5dafd1f44f1b2",
+  "desktop_commit": "e12fd31866f33cb613922d0b33ea506e6f23ce3c",
   "files": [],
   "instructions": "Populate only after inspecting the pinned inventory. Each entry has source (exact upstream path) and destination (relative to public/desktop, inside an approved group). Include font notices and unmodified Herdr 98 attribution files. This empty example deliberately cannot be imported."
 }
