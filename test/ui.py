@@ -5,7 +5,7 @@ import pathlib
 import time
 
 from harness import BINARY, Fixture, wait_for
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import expect, sync_playwright
 
 
 def main():
@@ -44,8 +44,8 @@ def main():
                     for target in [f'tab-{tab}',f'space-{second["workspace"]["workspace_id"]}',f'tab-{second_tab}']:
                         bounds=page.locator(f'[id="{target}"]').bounding_box()
                         page.mouse.click(bounds['x']+bounds['width']/2,bounds['y']+bounds['height']/2,button='right')
-                        assert page.locator('.web-popup').count()==1
-                        assert page.locator('.web-popup #menu').count()==1
+                        expect(page.locator('.web-popup')).to_have_count(1, timeout=5000)
+                        expect(page.locator('.web-popup #menu')).to_have_count(1, timeout=5000)
                     page.get_by_text('Rename',exact=True).click()
                     page.locator('#prompt input').fill('Rename specific tab')
                     page.get_by_text('Save',exact=True).click()
