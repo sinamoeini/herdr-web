@@ -88,6 +88,7 @@ preserve shell processes. See the acceptance ledger before relying on a feature.
 - [Acceptance results and known limitations](docs/ACCEPTANCE.md)
 - [Local API](docs/API.md) and [Git operations](docs/GIT.md)
 - [Contributing](CONTRIBUTING.md) and [publishing releases](docs/RELEASING.md)
+- [Changelog](CHANGELOG.md) and [security policy](SECURITY.md)
 - [Source provenance and adaptations](PORT.md)
 
 ## License

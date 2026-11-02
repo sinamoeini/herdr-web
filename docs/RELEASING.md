@@ -35,8 +35,9 @@ suites still run after an earlier suite fails.
    evidence into claims about a new build.
 2. Set the same version in `server/Cargo.toml` and `herdr-plugin.toml`; update the
    workspace package entry in `Cargo.lock` with Cargo. Update download examples
-   in `README.md`. Review the toolchain and license inventory if dependencies
-   changed.
+   in `README.md`. Move the relevant `CHANGELOG.md` entries into a versioned
+   release section and leave an Unreleased section for future work. Review the
+   toolchain and license inventory if dependencies changed.
 3. Commit and push to the chosen GitHub repository. After review, create and push
    a version tag, for example:
 

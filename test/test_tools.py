@@ -55,12 +55,16 @@ class VendorTests(unittest.TestCase):
 
     def test_locked_rust_dependencies_retain_original_license_files(self):
         import json
+        import tomllib
         manifest = json.loads((ROOT / 'public/vendor/licenses/rust/UPSTREAM.json').read_text())
+        locked = tomllib.loads((ROOT / 'Cargo.lock').read_text())
+        checksums = {(package['name'], package['version']): package.get('checksum') for package in locked['package']}
         self.assertEqual(manifest['missing_supplied_license_files'], [])
         self.assertTrue(manifest['packages'])
         for package in manifest['packages']:
             with self.subTest(package=package['name'], version=package['version']):
                 self.assertRegex(package['archive_checksum'], r'^[0-9a-f]{64}$')
+                self.assertEqual(package['archive_checksum'], checksums.get((package['name'], package['version'])), 'Refresh the Linux license inventory after changing Cargo dependencies')
                 self.assertTrue(package['files'])
                 for notice in package['files']:
                     path = ROOT / 'public/vendor/licenses/rust' / notice['file']

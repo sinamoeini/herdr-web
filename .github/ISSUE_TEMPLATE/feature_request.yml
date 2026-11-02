@@ -1,0 +1,37 @@
+name: Feature request
+description: Propose an improvement or a new workflow.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues first. Describe the user problem before prescribing an implementation.
+        Do not include private infrastructure details or terminal transcripts.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you trying to accomplish, and what is difficult today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed improvement
+      description: Describe the behavior you would like to see.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives or workarounds
+      description: What have you tried? Are there simpler ways to support the workflow?
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Relevant platform/browser constraints, sanitized screenshots, or related issues.
+    validations:
+      required: false

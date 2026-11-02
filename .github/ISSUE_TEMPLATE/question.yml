@@ -1,0 +1,23 @@
+name: Usage question
+description: Ask about installation, configuration, or a documented workflow.
+labels: [question]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Start with the [README](https://github.com/sinamoeini/herdr-web#readme) and [technical guide](https://github.com/sinamoeini/herdr-web/blob/main/docs/GUIDE.md).
+        Use a bug report for reproducible failures. Do not share credentials, cloud identifiers, or private terminal contents.
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What are you trying to do, and what is unclear?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Environment and what you tried
+      description: Include relevant versions and documentation you consulted. Sanitize any commands or output.
+    validations:
+      required: true

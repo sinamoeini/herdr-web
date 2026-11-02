@@ -1,0 +1,91 @@
+name: Bug report
+description: Report a reproducible problem with Herdr Web.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For security vulnerabilities, use the [security policy](https://github.com/sinamoeini/herdr-web/security/policy), not a public issue.
+        Remove credentials, cloud identifiers, private file paths, and terminal contents from logs and screenshots.
+  - type: input
+    id: version
+    attributes:
+      label: Herdr Web version or commit
+      description: Include the release tag or commit SHA and whether you used a release archive or source checkout.
+      placeholder: v0.1.0 release archive, or a commit SHA
+    validations:
+      required: true
+  - type: input
+    id: backend
+    attributes:
+      label: Original Herdr version
+      description: Output of herdr --version. Compatibility is currently scoped to Herdr 0.9.5.
+      placeholder: herdr 0.9.5
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Operating system and architecture
+      placeholder: Ubuntu 24.04, x86_64
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      description: Enter Not applicable for server-only or command-line failures.
+      placeholder: Firefox 157.0
+    validations:
+      required: true
+  - type: dropdown
+    id: launch
+    attributes:
+      label: Launch method
+      options:
+        - Native plugin
+        - Standalone executable
+        - CI or acceptance test
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Give the smallest reproducible example, preferably using a disposable session rather than an active terminal.
+      placeholder: |
+        1. Start an isolated Herdr session.
+        2. Open the web interface.
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include error messages and whether shell or terminal state was affected.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Sanitized logs, screenshots, or CI run
+      description: Optional browser console/server logs, screenshots, or a link to the failing workflow. Review every attachment before sharing it.
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and checked the documented limitations.
+          required: true
+        - label: I removed private data from this report and its attachments.
+          required: true

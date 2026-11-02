@@ -4,6 +4,17 @@ Keep changes focused and preserve backend ownership of shells and terminals.
 Read [the technical guide](docs/GUIDE.md), [the porting notes](PORT.md), and
 [known limitations](docs/ACCEPTANCE.md) before changing integration behavior.
 
+## Issues and pull requests
+
+Use the issue chooser to file a bug, request a feature, or ask a usage question.
+Bug reports should include versions, platform/browser details, reproduction
+steps, expected/actual behavior, and sanitized evidence. Follow `SECURITY.md`
+for vulnerabilities rather than opening a public issue.
+
+Complete the pull request template, describe checks actually run, and call out
+untested behavior. Add user-facing changes to `CHANGELOG.md`. Repository ownership
+is recorded in `.github/CODEOWNERS`; it does not replace required CI/merge rules.
+
 ## Local checks
 
 Python 3.11 or newer is required for the maintenance tests:
@@ -42,6 +53,9 @@ SSH topology, or every manual case in the acceptance ledger.
 Change upstream-panel adaptations in `tools/vendor.py`, not just generated files.
 Preserve original bytes, licenses, and provenance checksums for copied assets.
 Dependency changes require reviewing the locked Linux license inventory.
+Dependabot proposes weekly Cargo and GitHub Actions updates; it does not merge
+them automatically. Cargo changes may need the generated license inventory
+refreshed with `tools/vendor_rust_notices.py` on Linux before checks pass.
 
 ## Repository-local skills
 

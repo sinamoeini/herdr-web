@@ -18,6 +18,8 @@ DOCUMENTS = (
     "LICENSE",
     "README.md",
     "CONTRIBUTING.md",
+    "CHANGELOG.md",
+    "SECURITY.md",
     "THIRD_PARTY_NOTICES.md",
     "PORT.md",
     "docs/GUIDE.md",
