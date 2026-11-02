@@ -27,6 +27,11 @@ def wait_for(callback, timeout=15):
     raise AssertionError(f'Timed out waiting for fixture invariant: {last}')
 
 
+def wait_for_browser(page, expression, arg=None, timeout=15):
+    """Wait for the resolved value of a browser predicate, including Promises."""
+    return wait_for(lambda: page.evaluate(expression, arg), timeout=timeout)
+
+
 class Fixture:
     def __init__(self, label):
         self.directory = tempfile.TemporaryDirectory(prefix='hww-')

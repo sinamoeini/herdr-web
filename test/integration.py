@@ -12,7 +12,7 @@ import traceback
 import base64
 import urllib.parse
 from browser import wait_url
-from harness import BINARY
+from harness import BINARY, wait_for_browser
 from playwright.sync_api import sync_playwright
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -133,7 +133,7 @@ def main():
                         another=context.new_page();another.goto(url)
                         another.locator('[id=' + json.dumps('space-' + second['workspace']['workspace_id']) + ']').click()
                         another.locator('[id=' + json.dumps('tab-' + second_tab) + ']').click()
-                        another.wait_for_function("async id => (await import('/desktop/runtime/herdr.js')).model.selected.tab===id",arg=second_tab)
+                        wait_for_browser(another, "async id => (await import('/desktop/runtime/herdr.js')).model.selected.tab===id",arg=second_tab)
                         another.wait_for_selector('.terminal-pane[data-pane=' + json.dumps(second['root_pane']['pane_id']) + '][data-ready="true"]',timeout=15000)
                         assert page.evaluate("async()=> (await import('/desktop/runtime/herdr.js')).model.selected.tab")==first_tab
                         assert not any(command['method'] in {'workspace.focus','tab.focus','pane.focus','pane.focus_direction'} for command in browser_commands),browser_commands
