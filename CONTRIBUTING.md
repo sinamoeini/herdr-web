@@ -59,11 +59,17 @@ refreshed with `tools/vendor_rust_notices.py` on Linux before checks pass.
 
 ## Repository-local skills
 
-The five Herdr-specific agent skills live in `.agents/skills/`, including their
-references and UI metadata. They cover asset packaging, desktop DOM adapters,
-browser acceptance evidence, persistent terminal bridges, and safe deployment.
+The Herdr-specific agent skills live in `.agents/skills/`, including their
+references and UI metadata. They cover Herdr app upgrades, asset packaging, desktop
+DOM adapters, browser acceptance evidence, persistent terminal bridges, and safe
+deployment.
 They are development guidance, not application code or release assets. They do
 not grant permission to change live services, cloud resources, or credentials.
+
+For an upstream desktop asset upgrade, use
+[`herdr-app-upgrade`](.agents/skills/herdr-app-upgrade/SKILL.md). It documents release
+selection, reproducible imports, compatibility review, and local/GitHub verification
+without implying a backend upgrade or deployment.
 
 ## Privacy and reports
 

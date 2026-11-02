@@ -2,7 +2,7 @@
 
 ## Frozen inventory
 
-- Official desktop: `herdrdev/herdr-app`, commit `3e32d75e7aa2327d7b1f89caf3d5dafd1f44f1b2`. Selected `defaults/` frame/panels/layouts/icons/sounds/games, `assets/fonts/`, and license files are copied; palettes are extracted from `src/settings.rs`.
+- Official desktop: `herdrdev/herdr-app`, release `v0.1.11`, commit `e12fd31866f33cb613922d0b33ea506e6f23ce3c`. Selected `defaults/` frame/panels/layouts/icons/sounds/games, `assets/fonts/`, and license files are copied; palettes are extracted from `src/settings.rs`.
 - Original backend behavior: `herdrdev/herdr`, commit `2ecf19a92fc3a7fff75b6ce3655ef04f4625ec01`, release 0.9.5, public protocol 22, native endpoint generation 1. No whole repository, desktop Rust backend, or community frontend is vendored.
 - Browser dependencies: xterm 6.0.0, fit 0.11.0, highlight.js 11.11.1, acquired without executing Node/npm/Bun.
 

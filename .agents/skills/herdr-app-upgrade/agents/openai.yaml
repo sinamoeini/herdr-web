@@ -1,0 +1,4 @@
+interface:
+  display_name: "Herdr App Upgrade"
+  short_description: "Upgrade pinned Herdr app assets and verify CI evidence"
+  default_prompt: "Use $herdr-app-upgrade to upgrade this repository's Herdr app panels and assets to the latest verified release, preserve browser adaptations, and report the validation results."

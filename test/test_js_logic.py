@@ -203,6 +203,56 @@ class LogicTests(unittest.TestCase):
         """)
         self.assertEqual(json.loads(result), {"height": "18px", "padding": "2px", "pressed": {"paddingTop": "3px", "borderColor": "#000080"}, "keys": ["a", "猫", "😀", None]})
 
+    def test_browser_wheel_deltas_match_native_content_direction(self):
+        self.javascript.module("public/desktop/runtime/gpui.js")
+        result = self.javascript.evaluate("""
+            JSON.stringify([
+                normalized({deltaX: 12, deltaY: 100}).delta,
+                normalized({deltaX: -8, deltaY: -3.5}).delta,
+            ]);
+        """)
+        self.assertEqual(json.loads(result), [{"x": -12, "y": -100}, {"x": 8, "y": 3.5}])
+
+    def test_upgraded_picker_keeps_selection_inside_positioned_list(self):
+        self.javascript.module("public/desktop/runtime/gpui.js")
+        source = (ROOT / "public/desktop/mods/picker/main.js").read_text()
+        source = re.sub(r"^import .*?;\s*$", "", source, flags=re.MULTILINE)
+        source = source.replace("export default class Picker", "return class Picker")
+        self.javascript.evaluate("""
+            const pickerAPI = {
+                View: class {}, div, svg, v_flex: () => div().flex_col(), h_flex: () => div().flex_row(),
+                Input: {new: () => div()}, theme: () => ({}), settings: () => ({zoom: 1}),
+                spaces: () => [], agents: () => [], terminals: () => [],
+            };
+        """)
+        self.javascript.evaluate(f"const Picker = new Function(...Object.keys(pickerAPI), {json.dumps(source)})(...Object.values(pickerAPI));")
+        result = self.javascript.evaluate("""
+            const picker = new Picker();
+            Object.assign(picker, {filter: '', input: {}, at: 0, scroll: 0,
+                listHeight: 144, machines: Array.from({length: 20}, (_, index) => `machine-${index}`)});
+            function find(element, id) {
+                if (element.key === id) return element;
+                for (const child of element.items || []) {
+                    if (child && typeof child === 'object') {
+                        const found = find(child, id);
+                        if (found) return found;
+                    }
+                }
+            }
+            const context = {notify() {}, stop_propagation() {}};
+            picker.render().events.keydown({key: 'up'}, context);
+            const tree = picker.render();
+            const selected = find(tree, 'pk-space-machine-19');
+            const list = find(tree, 'pk-list');
+            const last = {top: selected.styles.top, bottom: selected.styles.bottom};
+            tree.events.keydown({key: 'down'}, context);
+            const firstTree = picker.render();
+            const first = find(firstTree, 'pk-new');
+            find(firstTree, 'pk-list').events.wheel(normalized({deltaX: 0, deltaY: 3.5}), context);
+            JSON.stringify({position: list.styles.position, last, first: first.styles.top, scroll: picker.scroll});
+        """)
+        self.assertEqual(json.loads(result), {"position": "relative", "last": {"top": "112px", "bottom": "0px"}, "first": "0px", "scroll": 3.5})
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -10,7 +10,7 @@ import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-DESKTOP = "3e32d75e7aa2327d7b1f89caf3d5dafd1f44f1b2"
+DESKTOP = "e12fd31866f33cb613922d0b33ea506e6f23ce3c"
 HERDR = "2ecf19a92fc3a7fff75b6ce3655ef04f4625ec01"
 IMPORTS = {
     "gpui-kit": "/desktop/runtime/gpui.js",
@@ -191,6 +191,9 @@ def import_assets(arguments):
             if source == "defaults/mods/agents/main.js":
                 text = text.replace('.child("Agents")', '.child(this.webProps?.parked ? "Parked terminals" : "Agents")')
                 changes.append("reuse agent tree component for the parked-terminal overlay")
+            if source == "defaults/mods/picker/main.js":
+                text = text.replace('.id("pk-list")', '.id("pk-list").relative()')
+                changes.append("position virtual picker rows relative to their browser list container")
             content = text.encode()
         target = output / destination
         if target.exists() and target.read_bytes() != content and digest(target.read_bytes()) != previous_files.get(destination):

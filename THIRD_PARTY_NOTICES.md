@@ -2,7 +2,7 @@
 
 ## Official desktop
 
-Selected `herdrdev/herdr-app` sources/assets come from commit `3e32d75e7aa2327d7b1f89caf3d5dafd1f44f1b2`. The original Apache-2.0 license is retained at `public/desktop/LICENSE`. `public/desktop/UPSTREAM.json` records each original/adapted digest, source path, commit, and modifications. See `PORT.md` for adapter changes and `tools/vendor.py` for repeatable transformations.
+Selected `herdrdev/herdr-app` sources/assets come from release `v0.1.11`, commit `e12fd31866f33cb613922d0b33ea506e6f23ce3c`. The original Apache-2.0 license is retained at `public/desktop/LICENSE`. `public/desktop/UPSTREAM.json` records each original/adapted digest, source path, commit, and modifications. See `PORT.md` for adapter changes and `tools/vendor.py` for repeatable transformations.
 
 Original Herdr behavior was inspected at `herdrdev/herdr` commit `2ecf19a92fc3a7fff75b6ce3655ef04f4625ec01` (0.9.5). Its whole source/executable is not vendored or linked as a desktop dependency.
 

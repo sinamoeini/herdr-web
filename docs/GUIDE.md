@@ -178,6 +178,6 @@ Integration tests use unique temporary Herdr sessions, isolated XDG/configuratio
 
 ## Sources, licenses, and measurements
 
-Frozen desktop commit: `3e32d75e7aa2327d7b1f89caf3d5dafd1f44f1b2`; original Herdr: `2ecf19a92fc3a7fff75b6ce3655ef04f4625ec01`. These are reference versions, not claims about latest releases. `PORT.md` describes source inspection/adaptations. `public/desktop/UPSTREAM.json` records original/adapted digests; `public/vendor/SHA256SUMS` verifies vendored browser files. Preserve licenses/attributions in `THIRD_PARTY_NOTICES.md` and the original asset folders.
+Frozen desktop release: `v0.1.11`, commit `e12fd31866f33cb613922d0b33ea506e6f23ce3c`; original Herdr: `2ecf19a92fc3a7fff75b6ce3655ef04f4625ec01`. These are reference versions, not claims about latest releases. `PORT.md` describes source inspection/adaptations. `public/desktop/UPSTREAM.json` records original/adapted digests; `public/vendor/SHA256SUMS` verifies vendored browser files. Preserve licenses/attributions in `THIRD_PARTY_NOTICES.md` and the original asset folders.
 
 For maintenance keep exact upstream checkouts **outside** this tree, then run `python3 tools/vendor.py import --desktop /absolute/herdr-app --plan tools/asset-plan.json`. Edit importer transformations, not generated panels. Run `python3 tools/sizes.py` to separate tracked source, untracked candidates, assets, Rust source, executable, Git metadata, and build output. Local deployment records and infrastructure access details should remain outside the repository; generated test logs/screenshots remain ignored.

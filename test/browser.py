@@ -89,6 +89,43 @@ def adapter_checks(page):
     assert page.locator(".web-popup").count() == 0
     assert page.locator("#controls").count() == 0
     assert page.evaluate("window.fixture.root") == '/panel-owned-folder'
+    picker_checks(page)
+
+
+def picker_checks(page):
+    page.evaluate("""async () => {
+      const { default: Picker } = await import('/desktop/mods/picker/main.js');
+      document.body.replaceChildren();
+      const container = document.createElement('div');
+      Object.assign(container.style, {width: '500px', margin: '60px'});
+      document.body.append(container);
+      class PickerFixture extends Picker {
+        init(properties, cx) {
+          super.init(properties, {...cx, spawn() {}});
+          this.machines = Array.from({length: 20}, (_, index) => `machine-${index}`);
+        }
+      }
+      window.pickerFixture = new PickerFixture().mount(container);
+    }""")
+    page.locator('#pk-list').wait_for(state='visible')
+    page.locator('input').focus()
+    page.keyboard.press('ArrowUp')
+    last = page.locator('#pk-space-machine-19')
+    last.wait_for(state='visible')
+    bounds = last.bounding_box()
+    viewport = page.locator('#pk-list').bounding_box()
+    assert bounds['y'] >= viewport['y'] - 1, (bounds, viewport)
+    assert bounds['y'] + bounds['height'] <= viewport['y'] + viewport['height'] + 1, (bounds, viewport)
+    page.keyboard.press('ArrowDown')
+    page.wait_for_function('window.pickerFixture.scroll === 0')
+    page.mouse.move(viewport['x'] + viewport['width'] / 2, viewport['y'] + viewport['height'] / 2)
+    page.mouse.wheel(0, 120)
+    page.wait_for_function('window.pickerFixture.scroll > 0')
+    previous = page.evaluate('window.pickerFixture.scroll')
+    page.mouse.wheel(0, -60)
+    page.wait_for_function('(previous) => window.pickerFixture.scroll < previous', arg=previous)
+    page.evaluate('window.pickerFixture.dispose()')
+    assert page.locator('#pk-list').count() == 0
 
 
 def http_checks(request, url, directory):
