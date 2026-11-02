@@ -186,8 +186,14 @@ def import_assets(arguments):
                 changes.append("commit control explicitly discloses staging all changes")
                 changes.append("diff parsing and maximum-width measurement are bounded to 1500 rows")
             if source == "defaults/mods/menu/main.js":
-                text = text.replace('["Zoom", "pane.zoom", { pane: tg.pane }],', '["Zoom", "pane.zoom", { pane: tg.pane }],\n        ["Rename", "pane.rename", { pane: tg.pane }],\n        ["Park terminal", "terminal.park", { terminal: tg.terminal }],')
-                changes.append("pane menu exposes rename and persistent parking through bounded adapter operations")
+                text = text.replace('["Zoom", "pane.zoom", { pane: tg.pane }],', '["Zoom", "pane.zoom", { pane: tg.pane }],\n        ["Rename", "pane.rename", { pane: tg.pane }],\n        ["New child agent…", "terminal.child", { parent: tg.terminal }],\n        ["Park terminal", "terminal.park", { terminal: tg.terminal }],')
+                changes.append("pane menu exposes rename, child-agent launch, and persistent parking through bounded adapter operations")
+            if source == "defaults/mods/new-menu/main.js":
+                text = text.replace('    const space = spaces().find(s => s.active);', '    const space = spaces().find(s => s.active);\n    const parent = this.webProps?.parent;\n    const launch = args => run(parent ? "terminal.child" : "tab.new", { ...args, ...(parent ? { parent, argv: args.argv || [] } : {}) });')
+                text = text.replace('run("tab.new", {', 'launch({')
+                text = text.replace('.child(div().h(1).mx(4).my(5).bg(t.border))', '.when(!parent, el => el.child(div().h(1).mx(4).my(5).bg(t.border))')
+                text = text.replace('action: "open" } }), "", Boolean(space)));', 'action: "open" } }), "", Boolean(space))));')
+                changes.append("agent picker launches children for its explicit parent and hides unrelated space/worktree actions")
             if source == "defaults/mods/agents/main.js":
                 text = text.replace('.child("Agents")', '.child(this.webProps?.parked ? "Parked terminals" : "Agents")')
                 changes.append("reuse agent tree component for the parked-terminal overlay")

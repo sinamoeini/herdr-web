@@ -4,6 +4,19 @@
 
 The initial release is in preparation. No binary release is published yet.
 
+### Fixed
+
+Ctrl+L now reaches the focused terminal, so the shell can clear the screen.
+
+- Restore child-agent launch from the pane menu through the existing backend.
+- Allow Ctrl+R shell history search and the default Ctrl+Shift+O split shortcut.
+- Implement the right-click preference and preserve access to the menu through pane headers.
+- Remember each space's selected tab across space changes and page reloads.
+- Restore Paper, Light/Dark/System appearance, and light terminal colors.
+- Add keyboard pane resizing with persistent ratios and visible divider focus.
+- Keep Tab navigation inside dialogs and restore focus when they close. Terminal previews retain Tab input.
+- Return to the main layout when the user resets the default screen.
+
 ### Changed
 
 - Upgrade browser-adapted Herdr app panels/assets from v0.1.9 to v0.1.11.

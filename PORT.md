@@ -21,7 +21,7 @@ The repeatable importer reads original Git blobs at the frozen revision and hash
 - Bare runtime imports become local browser modules; ambient `props()` becomes instance-owned `this.webProps` across asynchronous work.
 - Files use the bounded Rust list/read APIs. Folder watches carry their owning panel and cancel on disposal; command waits are cancellable. Diff parsing/measurement stops at 1,500 rows.
 - Current machine is described as Local server, updates as manual, telemetry as disabled. Unavailable feedback submission is removed, not a successful no-op.
-- Commit controls disclose staging all changes. Pane menus expose rename/parking. The parked overlay reuses the agent panel.
+- Commit controls disclose staging all changes. Pane menus expose rename, parking, and child-agent launch. The agent picker retains the selected parent. The parked overlay reuses the agent panel.
 - Delegated Herdr 98 roles receive correct properties/cancellation. SSH messages explain browser forwarding rather than native-core setup.
 - Built-in palettes become JSON. Font/image/sound binaries and font attribution files remain unchanged.
 

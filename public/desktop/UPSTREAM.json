@@ -1509,11 +1509,11 @@
       "destination": "mods/menu/main.js",
       "commit": "e12fd31866f33cb613922d0b33ea506e6f23ce3c",
       "original_sha256": "9a83d113ab40342aa07beb5d655f1a6d038bb2af4fc3f29ac932f035915a3b7d",
-      "adapted_sha256": "be82fc4a4bd3fe2b5defd59aa7976d7c116cb57c79b1fa3c5afa583b03cb7ab2",
+      "adapted_sha256": "f58bdfd361231867ef1730783d9ee40d5c533bf634cd7814987a113429ed7114",
       "changes": [
         "bare runtime imports rewritten",
         "ambient props replaced by instance-owned webProps",
-        "pane menu exposes rename and persistent parking through bounded adapter operations"
+        "pane menu exposes rename, child-agent launch, and persistent parking through bounded adapter operations"
       ]
     },
     {
@@ -1529,10 +1529,11 @@
       "destination": "mods/new-menu/main.js",
       "commit": "e12fd31866f33cb613922d0b33ea506e6f23ce3c",
       "original_sha256": "8ac368e53a09f783cf7ea3f36b3036e35b9dfabbee6758011ed39b388e767ceb",
-      "adapted_sha256": "c83bce210030d2f17588178c38bf7f01c7d8e0ca053dd2bbdbad71cbaf90eb9d",
+      "adapted_sha256": "68691a57643f5a2f0cc3ed0d73c73d55d796f944e5d420d796251f146524a4fd",
       "changes": [
         "bare runtime imports rewritten",
-        "ambient props replaced by instance-owned webProps"
+        "ambient props replaced by instance-owned webProps",
+        "agent picker launches children for its explicit parent and hides unrelated space/worktree actions"
       ]
     },
     {
