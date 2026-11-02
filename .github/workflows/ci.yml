@@ -14,6 +14,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  single-commit:
+    name: Single-commit PR
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - name: Require exactly one commit
+        env:
+          PR_COMMIT_COUNT: ${{ github.event.pull_request.commits }}
+        run: |
+          if [ "$PR_COMMIT_COUNT" != "1" ]; then
+            echo "::error::Pull requests must contain exactly one commit (found $PR_COMMIT_COUNT). Squash your commits and force-push with --force-with-lease."
+            exit 1
+          fi
+          echo "Pull request contains exactly one commit."
+
   acceptance:
     name: Linux acceptance
     uses: ./.github/workflows/acceptance.yml

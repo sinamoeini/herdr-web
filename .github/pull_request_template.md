@@ -11,6 +11,7 @@ browser or native permission acceptance.
 
 ## Checklist
 
+- [ ] This pull request contains exactly one commit.
 - [ ] This change is focused and does not include personal deployment data, credentials, or raw terminal transcripts.
 - [ ] Relevant tests and documentation are updated, or I explain why they are not needed.
 - [ ] Changes preserve backend ownership of shells/terminals and avoid input to active user sessions.
