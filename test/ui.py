@@ -4,8 +4,9 @@ import os
 import pathlib
 import time
 
-from harness import BINARY, Fixture, wait_for
+from harness import BINARY, Fixture, wait_for, wait_for_browser
 from frontend_regressions import run_frontend_regressions
+from terminal_geometry import run_terminal_geometry
 from playwright.sync_api import expect, sync_playwright
 
 
@@ -212,7 +213,7 @@ def main():
                     assert split_response.value.ok,split_response.value.status
                     selected_pane=split_response.value.json()['pane']['pane_id']
                     assert selected_pane not in previous_panes
-                    page.wait_for_function('''async pane=>{const {model}=await import('/desktop/runtime/herdr.js');return model.selected.pane===pane&&[...document.querySelectorAll('.terminal-pane')].some(element=>element.dataset.pane===pane&&element.dataset.ready==='true');}''',arg=selected_pane,timeout=20000)
+                    wait_for_browser(page, '''async pane=>{const {model}=await import('/desktop/runtime/herdr.js');return model.selected.pane===pane&&[...document.querySelectorAll('.terminal-pane')].some(element=>element.dataset.pane===pane&&element.dataset.ready==='true');}''',arg=selected_pane,timeout=20)
                     page.wait_for_function('pane=>document.activeElement?.closest(".terminal-pane")?.dataset.pane===pane',arg=selected_pane,timeout=8000)
                     page.keyboard.type("printf 'LOCAL_%s\\n' FOCUS")
                     page.keyboard.press('Enter')
@@ -223,6 +224,7 @@ def main():
                     current_panes={item['pane_id'] for item in fixture.rpc('session.snapshot')['snapshot']['panes']}
                     assert previous_panes < current_panes and len(current_panes)==len(previous_panes)+1
                     regressions=run_frontend_regressions(page,fixture)
+                    regressions['terminal_geometry']=run_terminal_geometry(page,fixture)
                     assert not any(command['method'] in {'workspace.focus','tab.focus','pane.focus','pane.focus_direction'} for command in commands),commands
                     page.screenshot(path=str(fixture.logs/f'{name}-desktop.png'))
                     errors.extend(page.evaluate('webPanelErrors'))

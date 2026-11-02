@@ -16,6 +16,7 @@ Ctrl+L now reaches the focused terminal, so the shell can clear the screen.
 - Add keyboard pane resizing with persistent ratios and visible divider focus.
 - Keep Tab navigation inside dialogs and restore focus when they close. Terminal previews retain Tab input.
 - Return to the main layout when the user resets the default screen.
+- Keep the final terminal row fully visible by excluding pane padding from the terminal size.
 
 ### Changed
 

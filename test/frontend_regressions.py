@@ -4,7 +4,7 @@ import json
 import shlex
 import subprocess
 
-from harness import wait_for
+from harness import wait_for, wait_for_browser
 from playwright.sync_api import expect
 
 
@@ -26,7 +26,7 @@ def type_command(page, pane, command):
 
 def choose_space(page, space):
     page.locator(f'[id="space-{space}"]').click()
-    page.wait_for_function(
+    wait_for_browser(page,
         'async id=>(await import("/desktop/runtime/herdr.js")).model.selected.space===id', arg=space)
 
 
@@ -35,7 +35,7 @@ def create_space(page):
         page.locator('#new-space-button').click()
     assert response.value.ok, response.value.status
     created = response.value.json()['root_pane']
-    page.wait_for_function(
+    wait_for_browser(page,
         'async id=>(await import("/desktop/runtime/herdr.js")).model.selected.pane===id',
         arg=created['pane_id'])
     value = selected(page)
@@ -64,7 +64,7 @@ def shortcuts_and_dividers(page, fixture, first):
     assert response.value.ok, response.value.status
     split_pane = response.value.json()['pane']['pane_id']
     wait_for(lambda: len(fixture.rpc('session.snapshot')['snapshot']['panes']) == before + 1)
-    page.wait_for_function(
+    wait_for_browser(page,
         'async id=>(await import("/desktop/runtime/herdr.js")).model.selected.pane===id', arg=split_pane)
     expect(terminal(page, split_pane).locator('.xterm-helper-textarea')).to_be_focused()
     expect(page.locator('.terminal-content .terminal-pane')).to_have_count(2)
@@ -75,11 +75,11 @@ def shortcuts_and_dividers(page, fixture, first):
     page.keyboard.press('Shift+Tab')
     expect(divider).to_be_focused()
     page.keyboard.press('ArrowRight')
-    page.wait_for_function(
+    wait_for_browser(page,
         'async()=>(await import("/desktop/runtime/herdr.js")).model.backendLayout.root.ratio>.5')
     expect(divider).to_be_focused()
     page.keyboard.press('ArrowRight')
-    page.wait_for_function(
+    wait_for_browser(page,
         'async()=>(await import("/desktop/runtime/herdr.js")).model.backendLayout.root.ratio>.59')
     page.keyboard.press('Home')
     expect(divider).to_have_attribute('aria-valuenow', '10')
@@ -90,7 +90,7 @@ def shortcuts_and_dividers(page, fixture, first):
     expect(page.get_by_role('separator', name='Resize panes')).to_have_attribute('aria-valuenow', '90')
     page.get_by_role('separator', name='Resize panes').focus()
     page.keyboard.press('ArrowLeft')
-    page.wait_for_function(
+    wait_for_browser(page,
         'async()=>(await import("/desktop/runtime/herdr.js")).model.backendLayout.root.ratio<.9')
 
 
@@ -102,7 +102,7 @@ def remembered_tabs(page, fixture, first):
     page.locator(f'[id="tab-{tab}"]').click()
     second = create_space(page)
     choose_space(page, first['space'])
-    page.wait_for_function(
+    wait_for_browser(page,
         'async tab=>(await import("/desktop/runtime/herdr.js")).model.selected.tab===tab', arg=tab)
     page.reload()
     page.wait_for_selector(f'[id="tab-{tab}"]')
@@ -118,14 +118,21 @@ def remembered_tabs(page, fixture, first):
         assert selected(page)['tab'] == tab
         assert selected(other)['tab'] == first['tab']
         fixture.post('/api/command', {'method': 'tab.close', 'params': {'tab_id': tab}})
-        page.wait_for_function(
+        expect(page.locator(f'[id="tab-{tab}"]')).to_have_count(0)
+        wait_for_browser(page,
             'async tab=>(await import("/desktop/runtime/herdr.js")).model.selected.tab===tab', arg=first['tab'])
         choose_space(page, second['space'])
         choose_space(page, first['space'])
-        assert selected(page)['tab'] == first['tab']
+        wait_for_browser(page,
+            'async tab=>(await import("/desktop/runtime/herdr.js")).model.selected.tab===tab', arg=first['tab'])
     finally:
         other.close()
-    terminal(page, selected(page)['pane'])
+    pane = wait_for_browser(page,
+        '''async ({space,tab})=>{
+            const current=(await import("/desktop/runtime/herdr.js")).model.selected;
+            return current.space===space&&current.tab===tab&&current.pane;
+        }''', arg=first)
+    terminal(page, pane)
 
 
 def appearance_and_reset(page, fixture):
@@ -153,13 +160,13 @@ def appearance_and_reset(page, fixture):
     page.wait_for_function('()=>getComputedStyle(document.documentElement).getPropertyValue("--background").trim()==="#ffffff"')
     page.keyboard.press('Escape')
     page.keyboard.press('Control+Shift+L')
-    page.wait_for_function('async()=>(await import("/desktop/runtime/herdr.js")).shared("layout")==="terminals"')
+    wait_for_browser(page, 'async()=>(await import("/desktop/runtime/herdr.js")).shared("layout")==="terminals"')
     current = selected(page)
     pid = fixture.rpc('pane.process_info', {'pane_id': current['pane']})['process_info']['shell_pid']
     page.keyboard.press('Control+Shift+P')
     page.locator('#palette input').fill('Reset to the default screen')
     page.get_by_text('Reset to the default screen', exact=True).click()
-    page.wait_for_function('async()=>(await import("/desktop/runtime/herdr.js")).shared("layout")==="main"')
+    wait_for_browser(page, 'async()=>(await import("/desktop/runtime/herdr.js")).shared("layout")==="main"')
     assert selected(page)['pane'] == current['pane']
     assert fixture.rpc('pane.process_info', {'pane_id': current['pane']})['process_info']['shell_pid'] == pid
     terminal(page, current['pane'])
@@ -259,7 +266,7 @@ def right_click_modes(page, fixture, first):
     assert 'MOUSE_REPORT:' not in fixture.read(pane)
     page.get_by_text('Send right-clicks to pane', exact=True).click()
     terminal_id = next(p['terminal_id'] for p in fixture.rpc('session.snapshot')['snapshot']['panes'] if p['pane_id'] == pane)
-    page.wait_for_function(
+    wait_for_browser(page,
         'async id=>(await import("/desktop/runtime/herdr.js")).shared("right_click."+id)==="program"', arg=terminal_id)
     viewport.click(button='right', position={'x': 30, 'y': 35})
     wait_for(lambda: 'MOUSE_REPORT:1b5b3c32' in fixture.read(pane))
@@ -268,7 +275,7 @@ def right_click_modes(page, fixture, first):
     # a normal context-menu target for restoring menu mode in both browsers.
     pane_menu(page, pane)
     page.get_by_text('Use Herdr right-click menu', exact=True).click()
-    page.wait_for_function(
+    wait_for_browser(page,
         'async id=>(await import("/desktop/runtime/herdr.js")).shared("right_click."+id)==="menu"', arg=terminal_id)
     before = fixture.read(pane).count('MOUSE_REPORT:')
     viewport.click(button='right', position={'x': 30, 'y': 35})

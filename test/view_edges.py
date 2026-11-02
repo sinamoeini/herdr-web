@@ -5,7 +5,7 @@ import json
 import pathlib
 import uuid
 
-from harness import Fixture, wait_for
+from harness import Fixture, wait_for, wait_for_browser
 from playwright.sync_api import sync_playwright
 
 
@@ -83,7 +83,7 @@ def main():
                     assert not any(command['method'] in {'workspace.focus', 'tab.focus', 'pane.focus', 'pane.focus_direction'} for command in commands), commands
                     fixture.post('/api/terminal-action', {'action': 'park', 'terminal': terminal})
                     fixture.post('/api/terminal-action', {'action': 'park', 'terminal': terminal})
-                    page.wait_for_function('async id=>(await import("/desktop/runtime/herdr.js")).model.selected.tab===id', arg=spare['tab']['tab_id'])
+                    wait_for_browser(page, 'async id=>(await import("/desktop/runtime/herdr.js")).model.selected.tab===id', arg=spare['tab']['tab_id'])
                     parked = current()
                     assert fixture.rpc('pane.process_info', {'pane_id': parked['pane_id']})['process_info']['shell_pid'] == original_pid
                     page.locator('#parked-button').click()

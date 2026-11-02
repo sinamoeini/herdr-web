@@ -20,6 +20,22 @@ asset upgrade.
 
 ## Environment and evidence
 
+### Terminal sizing, November 2, 2026
+
+The integration test for issue #10 runs through `ui.py` in Chromium and Firefox.
+It uses a real terminal program that paints its final row and reports its terminal dimensions.
+The test compares those dimensions with rendered rows and inspects screenshot pixels at three heights across the final row.
+
+The cases cover four browser sizes, a larger font, a horizontal split, and divider resizing.
+The test also requires the complete terminal screen to fit inside pane padding.
+Screenshots and terminal dimensions are recorded under the ignored test results directory.
+The test fails against the original executable and passes with the sizing fix in both browsers.
+The complete UI, terminal persistence, and native graphics suites also pass locally in both browsers.
+
+Browser state waits poll the resolved result of asynchronous conditions.
+The remembered-tab case waits for a pane ID in the expected space and tab before it inspects the terminal.
+The case also passes with delayed backend state responses in both browsers.
+
 ### Frontend regressions — November 2, 2026
 
 The nine behaviors in issue #8 pass local browser acceptance with original Herdr
