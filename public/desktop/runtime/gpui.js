@@ -18,7 +18,7 @@ function normalized(event) {
     if (key === "position") return { x:target.clientX, y:target.clientY };
     if (key === "bounds") { const rect=target.currentTarget?.getBoundingClientRect(); return rect?{x:rect.x,y:rect.y,width:rect.width,height:rect.height}:null; }
     if(key==="local_position"){const rect=target.currentTarget?.getBoundingClientRect();return {x:target.clientX-(rect?.left||0),y:target.clientY-(rect?.top||0)};}
-    if (key === "delta") return { x:target.deltaX, y:target.deltaY };
+    if (key === "delta") return { x:-target.deltaX, y:-target.deltaY };
     if (key === "modifiers") return { control:target.ctrlKey, shift:target.shiftKey, alt:target.altKey, platform:target.metaKey };
     const value = Reflect.get(target, key, target); return typeof value === "function" ? value.bind(target) : value;
   } });

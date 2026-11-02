@@ -14,6 +14,7 @@ desktop parity. See [acceptance and limitations](docs/ACCEPTANCE.md).
 
 - Linux x86_64; release binaries are built on Ubuntu 24.04 with glibc.
 - Original Herdr **0.9.5**, public protocol **22**, installed separately.
+- Browser panels/assets pinned to Herdr app **0.1.11**; native desktop engine fixes are not included.
 - Chromium or Firefox and an existing interactive Herdr session.
 
 Other operating systems, architectures, and Herdr versions are not certified.

@@ -4,6 +4,12 @@
 
 The initial release is in preparation. No binary release is published yet.
 
+### Changed
+
+- Upgrade browser-adapted Herdr app panels/assets from v0.1.9 to v0.1.11.
+- Retain upstream file-panel context isolation, picker selection visibility, sidebar fixes, and binding-aware shortcut hints.
+- Adapt virtual picker positioning and native wheel direction to browser events. Original Herdr 0.9.5/public protocol 22 remains unchanged; native desktop engine fixes are not part of this asset upgrade.
+
 ### Added
 
 - Browser-adapted desktop panels in a standalone Cargo-built executable.
