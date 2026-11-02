@@ -14,6 +14,13 @@ export async function request(path, body, options = {}) {
   return value;
 }
 
+export async function resolveTerminalPane(terminal) {
+  const value = await request("/api/state");
+  const pane = value.snapshot.panes.find(candidate => candidate.terminal_id === terminal);
+  if (!pane) throw new Error("Terminal no longer exists");
+  return pane;
+}
+
 function stored(storage, key) {
   try { const value=JSON.parse(storage.getItem(key) || "{}");return value&&typeof value==="object"&&!Array.isArray(value)?value:{}; } catch { return {}; }
 }

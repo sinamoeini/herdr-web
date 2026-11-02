@@ -143,6 +143,57 @@ class LogicTests(unittest.TestCase):
         """)
         self.assertEqual(json.loads(result), [{"x": 222, "y": 111}, {"x": 54, "y": 80}])
 
+    def test_preview_resolves_moved_terminal_without_changing_browser_selection(self):
+        self.javascript.evaluate('globalThis.localStorage=globalThis.sessionStorage={getItem:()=>null};')
+        self.javascript.module("public/desktop/runtime/herdr.js")
+        self.javascript.evaluate('''
+            model.snapshot.panes=[{pane_id:"w1:p1",terminal_id:"persistent-terminal"}];
+            model.selected={space:"w1",tab:"w1:t2",pane:"w1:p2"};
+            globalThis.lookupResult=null;
+            globalThis.requested=[];
+            globalThis.fetch=(url,options)=>{
+                requested.push({url,method:options.method});
+                return new Promise(resolve=>{globalThis.finishBackend=resolve;});
+            };
+            resolveTerminalPane("persistent-terminal").then(pane=>{globalThis.lookupResult=pane;});
+        ''')
+        self.assertEqual(self.javascript.evaluate('JSON.stringify(lookupResult)'), "null")
+        self.javascript.evaluate('''
+            finishBackend({ok:true,json:async()=>({snapshot:{panes:[
+                {pane_id:"w1:p1",terminal_id:"unrelated-terminal"},
+                {pane_id:"w3:p1",terminal_id:"persistent-terminal"}
+            ]}})});
+        ''')
+        result=json.loads(self.javascript.evaluate('JSON.stringify({resolved:lookupResult,cached:model.snapshot.panes,selected:model.selected,requested})'))
+        self.assertEqual(result["resolved"], {"pane_id":"w3:p1","terminal_id":"persistent-terminal"})
+        self.assertEqual(result["cached"], [{"pane_id":"w1:p1","terminal_id":"persistent-terminal"}])
+        self.assertEqual(result["selected"], {"space":"w1","tab":"w1:t2","pane":"w1:p2"})
+        self.assertEqual(result["requested"], [{"url":"/api/state","method":"GET"}])
+
+    def test_preview_rejects_deleted_terminal_instead_of_using_stale_mapping(self):
+        self.javascript.evaluate('globalThis.localStorage=globalThis.sessionStorage={getItem:()=>null};')
+        self.javascript.module("public/desktop/runtime/herdr.js")
+        self.javascript.evaluate('''
+            model.snapshot.panes=[{pane_id:"w1:p1",terminal_id:"deleted-terminal"}];
+            globalThis.lookupResult=null;
+            globalThis.fetch=async()=>({ok:true,json:async()=>({snapshot:{panes:[]}})});
+            resolveTerminalPane("deleted-terminal").then(
+                pane=>{lookupResult={pane};},error=>{lookupResult={error:error.message};});
+        ''')
+        self.assertEqual(json.loads(self.javascript.evaluate('JSON.stringify(lookupResult)')), {"error":"Terminal no longer exists"})
+
+    def test_preview_propagates_backend_failure_instead_of_using_stale_mapping(self):
+        self.javascript.evaluate('globalThis.localStorage=globalThis.sessionStorage={getItem:()=>null};')
+        self.javascript.module("public/desktop/runtime/herdr.js")
+        self.javascript.evaluate('''
+            model.snapshot.panes=[{pane_id:"w1:p1",terminal_id:"persistent-terminal"}];
+            globalThis.lookupResult=null;
+            globalThis.fetch=async()=>({ok:false,status:503,json:async()=>({error:"Backend unavailable"})});
+            resolveTerminalPane("persistent-terminal").then(
+                pane=>{lookupResult={pane};},error=>{lookupResult={error:error.message};});
+        ''')
+        self.assertEqual(json.loads(self.javascript.evaluate('JSON.stringify(lookupResult)')), {"error":"Backend unavailable"})
+
     def test_native_fluent_transforms_pressed_styles_and_printable_keys(self):
         self.javascript.module("public/desktop/runtime/gpui.js")
         result = self.javascript.evaluate("""

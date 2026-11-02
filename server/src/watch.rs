@@ -55,7 +55,7 @@ async fn poll(path: PathBuf,permit:OwnedSemaphorePermit) -> Result<Value> {
         Err(error) if error.0 == axum::http::StatusCode::NOT_FOUND => return Ok(json!({"changed":true,"missing":true})),
         result => result?,
     };
-    let descriptor = AsyncFd::new(file)?;
+    let descriptor = unsafe { AsyncFd::register(file) }.map_err(std::io::Error::from)?;
     let changed = match tokio::time::timeout(Duration::from_secs(17), descriptor.readable()).await {
         Ok(result) => { drop(result?); true },
         Err(_) => false,

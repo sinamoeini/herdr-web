@@ -10,6 +10,7 @@ impl Error {
     pub fn bad(message: impl Into<String>) -> Self { Self(StatusCode::BAD_REQUEST, message.into()) }
     pub fn backend(message: impl Into<String>) -> Self { Self(StatusCode::BAD_GATEWAY, message.into()) }
     pub fn unavailable(message: impl Into<String>) -> Self { Self(StatusCode::SERVICE_UNAVAILABLE, message.into()) }
+    #[cfg(not(target_os = "linux"))]
     pub fn unsupported(message: impl Into<String>) -> Self { Self(StatusCode::NOT_IMPLEMENTED, message.into()) }
 }
 
