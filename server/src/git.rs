@@ -1,5 +1,5 @@
-use std::{path::PathBuf, process::Stdio, sync::Arc, time::Duration};
-use tokio::{io::{AsyncRead, AsyncReadExt}, process::Command, sync::{Semaphore, oneshot, watch}};
+use std::{collections::BTreeMap, path::{Path, PathBuf}, process::{Output, Stdio}, sync::Arc, time::Duration};
+use tokio::{io::{AsyncRead, AsyncReadExt}, process::{Child, Command}, sync::{Semaphore, oneshot, watch}};
 use serde_json::{json, Value};
 use crate::{error::{Error, Result}, validation};
 
@@ -88,6 +88,59 @@ pub async fn read_output(mut reader: impl AsyncRead + Unpin) -> Result<Vec<u8>> 
     }
 }
 
+fn command(cwd: &Path) -> Command {
+    let mut command = Command::new("git");
+    for (name, _) in std::env::vars_os() {
+        if name.to_string_lossy().starts_with("GIT_") { command.env_remove(name); }
+    }
+    command.args(["--no-pager", "-c", "core.fsmonitor=false", "-c", "diff.external=", "-c", "core.pager=cat", "-c", "core.hooksPath=/dev/null", "-c", "commit.gpgSign=false"]);
+    command.current_dir(cwd).env("GIT_TERMINAL_PROMPT", "0")
+        .env("GIT_CONFIG_NOSYSTEM", "1").env("GIT_CONFIG_GLOBAL", "/dev/null")
+        .stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped()).kill_on_drop(true);
+    command
+}
+
+fn identity_arguments(output: &[u8]) -> Result<Vec<String>> {
+    let text = std::str::from_utf8(output).map_err(|_| Error::bad("Git identity must use UTF-8"))?;
+    if !text.is_empty() && !text.ends_with('\0') { return Err(Error::bad("incomplete Git identity response")); }
+    let mut fields = BTreeMap::new();
+    for record in text.split_terminator('\0') {
+        let (key, value) = record.split_once('\n').ok_or_else(|| Error::bad("Git identity must have a value"))?;
+        if !matches!(key, "user.name" | "user.email" | "author.name" | "author.email" | "committer.name" | "committer.email") {
+            return Err(Error::bad("unexpected Git identity field"));
+        }
+        if value.len() > 8192 { return Err(Error::bad("Git identity field exceeds 8192 bytes")); }
+        fields.insert(key, value);
+    }
+    for role in ["author", "committer"] {
+        for field in ["name", "email"] {
+            let specific = format!("{role}.{field}");
+            let fallback = format!("user.{field}");
+            if fields.get(specific.as_str()).or_else(|| fields.get(fallback.as_str())).is_none_or(|value| value.trim().is_empty()) {
+                return Err(Error(axum::http::StatusCode::UNPROCESSABLE_ENTITY,
+                    format!("Configure Git {role} {field} before committing ({fallback} or {specific})")));
+            }
+        }
+    }
+    Ok(fields.into_iter().flat_map(|(key, value)| ["-c".into(), format!("{key}={value}")]).collect())
+}
+
+async fn run_child(command: &mut Command, owned: &mut Option<Child>) -> Result<Output> {
+    *owned = Some(command.spawn()?);
+    let child = owned.as_mut().unwrap();
+    let stdout = child.stdout.take().unwrap();
+    let stderr = child.stderr.take().unwrap();
+    let (stdout, stderr, status) = tokio::try_join!(
+        read_output(stdout), read_output(stderr),
+        async { child.wait().await.map_err(Error::from) }
+    )?;
+    Ok(Output { status, stdout, stderr })
+}
+
+fn response(output: Output) -> Value {
+    json!({"code":output.status.code().unwrap_or(-1), "stdout":String::from_utf8_lossy(&output.stdout), "stderr":String::from_utf8_lossy(&output.stderr)})
+}
+
 pub struct Jobs { capacity: Arc<Semaphore>, shutdown: watch::Receiver<bool> }
 
 impl Jobs {
@@ -106,45 +159,43 @@ impl Jobs {
         let (mut sender, receiver) = oneshot::channel();
         tokio::spawn(async move {
             let _permit = permit;
-            let mut command = Command::new("git");
-            for (name, _) in std::env::vars_os() {
-                if name.to_string_lossy().starts_with("GIT_") { command.env_remove(name); }
-            }
-            command.args(["--no-pager", "-c", "core.fsmonitor=false", "-c", "diff.external=", "-c", "core.pager=cat", "-c", "core.hooksPath=/dev/null", "-c", "commit.gpgSign=false"]);
-            let mut operation=0;
-            while operation<arguments.len(){match arguments[operation].as_str(){"--no-optional-locks"=>operation+=1,"-c"|"--git-dir"=>operation+=2,_=>break}}
-            if arguments.get(operation).is_some_and(|argument|argument=="diff") {
-                let index=operation;
-                command.args(&arguments[..=index]).args(["--no-ext-diff", "--no-textconv"]).args(&arguments[index+1..]);
-            } else {
-                command.args(&arguments);
-            }
-            command.current_dir(cwd).env("GIT_TERMINAL_PROMPT", "0")
-                .env("GIT_CONFIG_NOSYSTEM", "1").env("GIT_CONFIG_GLOBAL", "/dev/null")
-                .env_remove("GIT_CONFIG_COUNT").env_remove("GIT_CONFIG_PARAMETERS")
-                .env_remove("GIT_DIR").env_remove("GIT_WORK_TREE")
-                .stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped()).kill_on_drop(true);
-            let mut child = match command.spawn() {
-                Ok(child) => child,
-                Err(error) => { let _ = sender.send(Err(Error::from(error))); return; }
-            };
-            let stdout = child.stdout.take().unwrap();
-            let stderr = child.stderr.take().unwrap();
+            let mut child = None;
             let result = {
                 let operation = async {
-                    let (stdout, stderr, status) = tokio::try_join!(
-                        read_output(stdout), read_output(stderr),
-                        async { child.wait().await.map_err(Error::from) }
-                    )?;
-                    Ok(json!({"code":status.code().unwrap_or(-1), "stdout":String::from_utf8_lossy(&stdout), "stderr":String::from_utf8_lossy(&stderr)}))
+                    let mut command = command(&cwd);
+                    let mut index = 0;
+                    while index < arguments.len() {
+                        match arguments[index].as_str() { "--no-optional-locks" => index += 1, "-c" | "--git-dir" => index += 2, _ => break }
+                    }
+                    if arguments.get(index).is_some_and(|argument| argument == "commit") {
+                        let mut identity = self::command(&cwd);
+                        for name in ["GIT_CONFIG_GLOBAL", "GIT_CONFIG_SYSTEM", "GIT_CONFIG_NOSYSTEM"] {
+                            match std::env::var_os(name) {
+                                Some(value) => { identity.env(name, value); }
+                                None => { identity.env_remove(name); }
+                            }
+                        }
+                        identity.args(["config", "--includes", "--null", "--get-regexp", "^(user|author|committer)\\.(name|email)$"]);
+                        let output = run_child(&mut identity, &mut child).await?;
+                        if !output.status.success() && output.status.code() != Some(1) { return Ok(response(output)); }
+                        command.args(identity_arguments(&output.stdout)?)
+                            .args(["-c", "user.useConfigOnly=true"]).env_remove("EMAIL");
+                    }
+                    if arguments.get(index).is_some_and(|argument| argument == "diff") {
+                        command.args(&arguments[..=index]).args(["--no-ext-diff", "--no-textconv"]).args(&arguments[index+1..]);
+                    } else {
+                        command.args(&arguments);
+                    }
+                    run_child(&mut command, &mut child).await.map(response)
                 };
                 tokio::select! {
-                    result = tokio::time::timeout(Duration::from_secs(15), operation) => result.unwrap_or_else(|_| Err(Error::unavailable("Git timed out after 15 seconds"))),
+                    biased;
                     _ = sender.closed() => Err(Error::unavailable("Git request was cancelled")),
                     _ = shutdown.wait_for(|value| *value) => Err(Error::unavailable("server is stopping")),
+                    result = tokio::time::timeout(Duration::from_secs(15), operation) => result.unwrap_or_else(|_| Err(Error::unavailable("Git timed out after 15 seconds"))),
                 }
             };
-            if !matches!(child.try_wait(), Ok(Some(_))) {
+            if let Some(child) = child.as_mut() && !matches!(child.try_wait(), Ok(Some(_))) {
                 let _ = child.start_kill();
                 if tokio::time::timeout(Duration::from_secs(2), child.wait()).await.is_err() {
                     eprintln!("owned Git child {:?} did not reap within two seconds", child.id());
@@ -185,5 +236,16 @@ mod tests {
         let bytes = vec![b'a'; OUTPUT_LIMIT + 1];
         assert!(read_output(bytes.as_slice()).await.is_err());
         assert_eq!(read_output(&b"ok"[..]).await.unwrap(), b"ok");
+    }
+
+    #[test]
+    fn identity_is_narrow_and_last_configured_value_wins() {
+        assert_eq!(identity_arguments(b"user.name\nGlobal\0user.name\nLocal = Name\0user.email\nlocal@example.invalid\0").unwrap(),
+            vec!["-c", "user.email=local@example.invalid", "-c", "user.name=Local = Name"]);
+        for output in [b"".as_slice(), b"core.hooksPath\n/tmp/hooks\0", b"user.name\0", b"user.name\ntruncated", b"user.name\n\xff\0",
+            b"user.name\nName\0user.email\n \0", b"user.name\nName\0user.email\nfixture@example.invalid\0author.email\n\0"] {
+            assert!(identity_arguments(output).is_err());
+        }
+        assert!(identity_arguments(format!("user.name\n{}\0", "x".repeat(8193)).as_bytes()).is_err());
     }
 }

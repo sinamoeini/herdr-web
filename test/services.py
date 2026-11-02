@@ -10,6 +10,7 @@ import threading
 import time
 
 from harness import BINARY, Fixture, wait_for
+from git_identity import run_git_identity
 
 
 def main():
@@ -141,6 +142,7 @@ def main():
         assert not worktree.exists()
         assert fixture.http('/api/git', {'cwd': str(repository), 'args': ['diff', '--output=/tmp/rejected']})[0] == 400
         evidence['git_diff_staging_commit_and_worktree'] = True
+        evidence['git_identity'] = run_git_identity()
 
         for host in ['-oProxyCommand=evil', 'bad host', 'user@host;command']:
             assert fixture.http('/api/machines', {'action': 'connect', 'host': host})[0] == 400
