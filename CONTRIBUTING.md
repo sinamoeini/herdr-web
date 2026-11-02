@@ -15,6 +15,11 @@ Complete the pull request template, describe checks actually run, and call out
 untested behavior. Add user-facing changes to `CHANGELOG.md`. Repository ownership
 is recorded in `.github/CODEOWNERS`; it does not replace required CI/merge rules.
 
+Every pull request must contain exactly one commit. The required `Single-commit
+PR` check rejects multi-commit pull requests. When updating a pull request, amend
+its existing commit or squash your commits, then push with `--force-with-lease`.
+Choosing squash merge does not bypass this requirement.
+
 ## Local checks
 
 Python 3.11 or newer is required for the maintenance tests:
