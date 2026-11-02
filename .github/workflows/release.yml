@@ -12,8 +12,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  acceptance:
+    name: Linux acceptance
+    uses: ./.github/workflows/acceptance.yml
+
   release:
     name: Linux x86_64 draft release
+    needs: acceptance
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:

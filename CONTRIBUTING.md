@@ -15,10 +15,27 @@ cargo test --locked --workspace
 ./build.sh
 ```
 
-JavaScriptCore logic tests run on macOS; Linux skips those tests. Full Linux
-browser and native plugin acceptance additionally requires original Herdr 0.9.5
-and the optional tools described in the technical guide. Unit/packaging CI is not
-a substitute for those integration suites.
+JavaScriptCore logic tests run on macOS; Linux skips those tests. Every pull
+request and push to `main` also runs all 12 current Linux acceptance suites using
+checksum-pinned original Herdr 0.9.5, Chromium and Firefox, real terminal/backend
+fixtures, isolated loopback SSH, and headed clipboard/audio checks under Xvfb
+with a private PulseAudio null sink. Failed suites do not prevent later suites
+from running; the overall acceptance job fails if any suite fails. Logs,
+screenshots, and per-suite outcomes are retained as workflow artifacts for seven
+days, including on failure.
+
+To run the same suite on an isolated Linux development host with the documented
+prerequisites already installed:
+
+```sh
+HERDR_BIN="$(command -v herdr)" python3 tools/run_acceptance.py
+```
+
+The runner requires `target/release/herdr-web`, including for plugin lifecycle
+tests. CI installs prerequisites only on disposable GitHub-hosted runners; the
+local runner never installs packages or changes system services. These automated
+checks do not certify physical speaker output, physical drag/drop, external-host
+SSH topology, or every manual case in the acceptance ledger.
 
 ## Assets and licenses
 

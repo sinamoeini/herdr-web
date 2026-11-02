@@ -133,6 +133,12 @@ The local HTTP/WebSocket request and response envelopes are documented in `docs/
 
 ## Tests
 
+GitHub CI runs every current native acceptance suite on isolated Linux runners,
+including Chromium/Firefox and headed clipboard/audio checks. With the following
+prerequisites installed, `HERDR_BIN="$(command -v herdr)" python3 tools/run_acceptance.py`
+runs the same 12 suites locally and records every suite's outcome. It must use the
+manifest's `target/release/herdr-web`, not a candidate-binary override.
+
 Build and optional browser test prerequisites must be installed explicitly:
 
 ```sh

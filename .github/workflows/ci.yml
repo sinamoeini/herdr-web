@@ -14,6 +14,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  acceptance:
+    name: Linux acceptance
+    uses: ./.github/workflows/acceptance.yml
+
   python:
     name: Assets, packaging, and logic (${{ matrix.os }})
     runs-on: ${{ matrix.os }}

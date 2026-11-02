@@ -4,6 +4,14 @@
 
 ## Environment and evidence
 
+GitHub CI is configured to run all 12 current native acceptance suites on every
+pull request and push to `main`, and before creating a draft release. Workflow
+artifacts include per-suite exit codes/logs, browser evidence, executable/backend
+hashes, and the tested source SHA. Configuration alone is not a passing run: the
+results below remain historical until a specific new workflow run is verified.
+Physical hardware, external-host SSH, and the scoped/manual cases below remain
+distinct from automated CI acceptance.
+
 Ubuntu 24.04 x86_64; Rust/Cargo **1.99.1**; original Herdr **0.9.5**, public protocol **22**, native generation **1**. Python Playwright **1.64.1**; Chromium **156.0.8078.4** and Firefox **157.0**. No application Node/npm/Bun/bundler workflow. Optional headed permission tests use Xvfb, X11 clipboard ownership, and PulseAudio **16.1** with a private null sink.
 
 Historical raw logs and deployment-specific evidence are kept in a private archive outside the repository. They are not shipped as plugin assets or independently available from this checkout. Fresh runs write logs/screenshots under ignored `test-results/`. A multi-suite invocation can fail overall while individual suites pass; only successful sections count as evidence.

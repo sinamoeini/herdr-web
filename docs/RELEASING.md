@@ -5,17 +5,28 @@
 Pull requests and pushes to `main` run local Python/provenance checks, manifest
 validation, and shell syntax checks. macOS runs JavaScriptCore logic tests; Linux
 also runs locked Rust tests, builds the executable, and exercises release
-packaging. CI does not claim full Herdr/browser/clipboard acceptance.
+packaging. A reusable Linux acceptance job runs all 12 current native suites:
+`integration.py`, `ui.py`, `graphics_browser.py`, `view_edges.py`, `services.py`,
+`security.py`, `resources.py`, `git_failures.py`, `watch_resources.py`, `plugin.py`,
+`ssh.py`, and `permissions.py`. It uses checksum-pinned original Herdr 0.9.5 and
+Playwright 1.64.1 with Chromium and Firefox, including headed native clipboard
+and audio tests on isolated X11/private PulseAudio. This is not physical-device
+or external-host certification; the historical foundation-only fixture is not
+used as a substitute for desktop acceptance.
 
 A pushed `v*` tag runs the Linux release workflow. It verifies that the tag agrees
-with both Cargo and plugin versions, runs checks, builds on Ubuntu 24.04, packages
+with both Cargo and plugin versions, requires the same acceptance job to pass,
+runs checks, builds on Ubuntu 24.04, packages
 the Linux x86_64 executable, and creates a **draft** GitHub release with the archive
 and `SHA256SUMS`. The package includes licenses, provenance, documentation, and a
 manifest that runs the bundled executable without a source build hook.
 
 Workflow actions are pinned by commit; the Rust toolchain and Cargo dependencies
 are pinned in source. No personal cloud account or deploy credentials are needed.
-The workflow uses the repository's GitHub token only to create the draft release.
+The draft-release step uses the repository's GitHub token. Acceptance uses only
+read-only repository permissions and no personal credentials. Full test artifacts
+and the per-suite summary are retained for seven days even on failure; later
+suites still run after an earlier suite fails.
 
 ## Maintainer checklist
 

@@ -1,0 +1,57 @@
+name: Linux acceptance
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  acceptance:
+    name: Chromium, Firefox, native services, and permissions
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      SHELL: /bin/bash
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12'
+      - name: Install isolated-runner browser and native test prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends openssh-server pulseaudio xvfb xauth libx11-6
+          sudo install -d -m 0755 /run/sshd
+          python3 -m pip install playwright==1.64.1
+          python3 -m playwright install --with-deps chromium firefox
+      - name: Install checksum-pinned original Herdr 0.9.5
+        run: |
+          mkdir -p "$RUNNER_TEMP/herdr-bin"
+          curl --fail --show-error --location --retry 3 \
+            https://github.com/herdrdev/herdr/releases/download/v0.9.5/herdr-linux-x86_64 \
+            --output "$RUNNER_TEMP/herdr-bin/herdr"
+          printf '%s  %s\n' \
+            14d9e8bc8b4a9e0118d77c32266f76d461f09b40342eb23752960bd89f59929d \
+            "$RUNNER_TEMP/herdr-bin/herdr" | sha256sum --check
+          chmod 755 "$RUNNER_TEMP/herdr-bin/herdr"
+          echo "HERDR_BIN=$RUNNER_TEMP/herdr-bin/herdr" >> "$GITHUB_ENV"
+          echo "$RUNNER_TEMP/herdr-bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/herdr-bin/herdr" --version
+      - name: Install pinned Rust toolchain
+        run: rustup show active-toolchain
+      - name: Build manifest executable
+        run: ./build.sh
+      - name: Run all 12 native acceptance suites
+        run: python3 tools/run_acceptance.py
+      - name: Retain logs, screenshots, and per-suite outcomes
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: linux-acceptance-${{ github.run_id }}-${{ github.run_attempt }}
+          path: test-results/
+          if-no-files-found: warn
+          retention-days: 7
