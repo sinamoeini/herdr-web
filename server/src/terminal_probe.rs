@@ -1,6 +1,39 @@
 pub const QUERY: &[u8] = b"\x1b[?1016$p\x1b[c";
 pub const REPLY: &[u8] = b"\x1b[?1016;0$y\x1b[?1;2c";
 
+const FRAME_BEGIN: &[u8] = b"\x1b[?2026h";
+const FRAME_END: &[u8] = b"\x1b[?2026l";
+
+#[derive(Default)]
+pub struct AttachmentReadiness {
+    matched: usize,
+    started: bool,
+    ready: bool,
+}
+
+impl AttachmentReadiness {
+    pub fn push(&mut self, bytes: &[u8]) -> bool {
+        if self.ready { return false; }
+        for byte in bytes {
+            let pattern = if self.started { FRAME_END } else { FRAME_BEGIN };
+            self.matched = if *byte == pattern[self.matched] {
+                self.matched + 1
+            } else {
+                usize::from(*byte == pattern[0])
+            };
+            if self.matched == pattern.len() {
+                self.matched = 0;
+                if self.started {
+                    self.ready = true;
+                    return true;
+                }
+                self.started = true;
+            }
+        }
+        false
+    }
+}
+
 #[derive(Default)]
 pub struct CapabilityFilter {
     pending: Vec<u8>,
@@ -31,6 +64,38 @@ impl CapabilityFilter {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn readiness_requires_a_complete_frame_across_every_fragmentation() {
+        let bytes = [b"\x1b[?2004h\x1b[?7l".as_slice(), FRAME_BEGIN, b"\x1b[?25lprompt", FRAME_END].concat();
+        for split in 0..bytes.len() {
+            let mut readiness = AttachmentReadiness::default();
+            assert!(!readiness.push(&bytes[..split]));
+            assert!(readiness.push(&bytes[split..]));
+            assert!(!readiness.push(&bytes));
+        }
+        let mut readiness = AttachmentReadiness::default();
+        for (index, byte) in bytes.iter().enumerate() {
+            assert_eq!(readiness.push(&[*byte]), index + 1 == bytes.len());
+        }
+    }
+
+    #[test]
+    fn capability_probe_and_busy_failure_never_report_ready() {
+        let bytes = [QUERY, b"\x1b[?2004hterminal attach failed: already has an attached client\r\n", FRAME_END].concat();
+        let mut readiness = AttachmentReadiness::default();
+        for byte in bytes { assert!(!readiness.push(&[byte])); }
+    }
+
+    #[test]
+    fn incomplete_frames_wait_for_their_end_despite_unrelated_prefixes() {
+        let mut readiness = AttachmentReadiness::default();
+        assert!(!readiness.push(FRAME_END));
+        assert!(!readiness.push(b"\x1b[?2026X\x1b\x1b[?2026"));
+        assert!(!readiness.push(b"hpartial frame\x1b[?2026"));
+        assert!(readiness.push(b"l"));
+        assert!(!readiness.push(FRAME_END));
+    }
 
     #[test]
     fn every_fragmentation_including_single_bytes() {

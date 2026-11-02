@@ -91,7 +91,7 @@ class PaneTerminal{
     if(this.disposed)return;const generation=++this.generation;this.inputReady(false);this.sentResize="";this.socket?.close();
     const socket=this.socket=websocket(`/terminal/${encodeURIComponent(this.pane.pane)}`);socket.binaryType="arraybuffer";
     socket.onopen=()=>{if(generation===this.generation)this.fit();};
-    socket.onmessage=event=>{if(this.disposed||generation!==this.generation)return;if(typeof event.data!=="string")this.terminal.write(new Uint8Array(event.data));else{const value=JSON.parse(event.data);if(value.ready){this.inputReady(true);this.error.hidden=true;this.fit();}if(value.error)this.showError(value.error);}};
+    socket.onmessage=event=>{if(this.disposed||generation!==this.generation)return;if(typeof event.data!=="string")this.terminal.write(new Uint8Array(event.data));else{const value=JSON.parse(event.data);if(value.ready){this.inputReady(true);this.error.hidden=true;this.fit();}if(value.error){this.inputReady(false);this.showError(value.error);}}};
     socket.onclose=event=>{if(this.disposed||generation!==this.generation)return;this.inputReady(false);this.showError(event.reason||"Attachment disconnected. Retrying…");if(event.code!==1000)this.retry=setTimeout(()=>this.connect(),1500);};
     socket.onerror=()=>this.showError("Terminal connection failed; retrying without taking over another client.");
   }

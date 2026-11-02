@@ -54,7 +54,7 @@ Strings cap at 512 UTF-8 bytes and reject NUL. `focus` is Boolean. Insertion ind
 
 ### `/terminal/PANE_ID`
 
-Resolves the pane to its terminal from a fresh snapshot, starts a temporary CLI attachment, and sends text `{"ready":true}` after its local startup exchange. Subsequent terminal output is **binary**; it is not JSON. Browser input is text JSON:
+Resolves the pane to its terminal from a fresh snapshot and starts a temporary CLI attachment. The local capability exchange is answered immediately but does not advertise input readiness: it happens before backend ownership is accepted. Text `{"ready":true}` is sent only after forwarding the first complete terminal ANSI frame. With pinned Herdr 0.9.5, successful frames are bracketed by `CSI ? 2026 h/l`; a busy/rejected attachment emits no accepted frame and must never advertise readiness. Terminal output is **binary**; it is not JSON. Browser input is text JSON:
 
 ```json
 {"type":"input","data":"echo hello\r"}

@@ -46,16 +46,21 @@ def main():
         try:
             while True:
                 opcode,payload=second.receive()
-                if opcode==1 and json.loads(payload).get('error'):
-                    busy='busy' in json.loads(payload)['error'].lower();break
+                if opcode==1:
+                    message=json.loads(payload)
+                    assert not message.get('ready'),'Busy attachment advertised input readiness before backend acceptance'
+                    if message.get('error'):
+                        busy='busy' in message['error'].lower();break
                 if opcode==8:break
+            assert busy
+            first.send({'type':'input','data':"printf 'OWNER_%s\\n' PRESERVED\r"})
+            wait_for(lambda:'OWNER_PRESERVED' in fixture.read(panes[0]))
         finally:
             second.close();first.close()
-        assert busy
         wait_for(lambda:not children(fixture.web.pid))
         fixture.web.terminate();fixture.web.wait(timeout=20)
         shim=fixture.root/'herdr-stream'
-        python='import os,sys,tty;tty.setraw(0);os.write(1,b"\\x1b[?1016$p\\x1b[c");expected=b"\\x1b[?1016;0$y\\x1b[?1;2c";assert sys.stdin.buffer.read(len(expected))==expected;payload=b"x"*16384\nwhile True: os.write(1,payload)'
+        python='import os,sys,tty;tty.setraw(0);os.write(1,b"\\x1b[?1016$p\\x1b[c");expected=b"\\x1b[?1016;0$y\\x1b[?1;2c";assert sys.stdin.buffer.read(len(expected))==expected;os.write(1,b"\\x1b[?2026h\\x1b[?25lready\\x1b[?2026l");payload=b"x"*16384\nwhile True: os.write(1,payload)'
         shim.write_text('#!/bin/sh\nif [ "$1" = terminal ]; then exec /usr/bin/python3 -c '+shlex.quote(python)+'; fi\nexec '+shlex.quote(str(fixture.herdr))+' "$@"\n')
         shim.chmod(0o700)
         fixture.environment['HERDR_BIN']=str(shim)
@@ -75,7 +80,7 @@ def main():
         assert not children(fixture.web.pid),'Stalled attachment child was not reaped'
         assert peak-before<64*1024,(before,peak)
         assert fixture.rpc('session.snapshot')['snapshot']['panes']
-        result={'attachment_capacity_32_and_release':True,'busy_without_takeover':True,'stalled_reader_child_reaped':True,'rss_growth_kib':peak-before,'backpressure_uses_fault_injected_pty_producer':True}
+        result={'attachment_capacity_32_and_release':True,'busy_without_takeover':True,'busy_never_advertises_ready':True,'existing_owner_accepts_input_after_busy_rejection':True,'stalled_reader_child_reaped':True,'rss_growth_kib':peak-before,'backpressure_uses_fault_injected_pty_producer':True}
         (fixture.logs/'results.json').write_text(json.dumps(result,indent=2))
         print(json.dumps(result,indent=2),flush=True)
 

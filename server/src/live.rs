@@ -11,7 +11,7 @@ use std::{io::{Read, Write}, sync::{Arc, atomic::{AtomicBool, Ordering}, mpsc as
 use axum::extract::ws::{WebSocket, Message, CloseFrame};
 use tokio::sync::{mpsc, OwnedSemaphorePermit, watch};
 use portable_pty::{CommandBuilder, PtySize, native_pty_system};
-use crate::{backend::Backend, error::Error, terminal_probe::{CapabilityFilter, REPLY}};
+use crate::{backend::Backend, error::Error, terminal_probe::{AttachmentReadiness, CapabilityFilter, REPLY}};
 
 struct Attachment {
     child: Box<dyn portable_pty::Child + Send + Sync>,
@@ -115,6 +115,7 @@ pub async fn attach(mut socket: WebSocket, backend: Arc<Backend>, pane: String, 
         let probe_writer = input.clone();
         let reader_task = tokio::task::spawn_blocking(move || {
             let mut filter = CapabilityFilter::default();
+            let mut readiness = AttachmentReadiness::default();
             let mut buffer = [0; 16384];
             while !reader_stop.load(Ordering::Acquire) {
                 match reader.read(&mut buffer) {
@@ -123,9 +124,10 @@ pub async fn attach(mut socket: WebSocket, backend: Arc<Backend>, pane: String, 
                         let (bytes, answer) = filter.push(&buffer[..length]);
                         if answer {
                             if enqueue(&probe_writer, Input::Text(String::from_utf8(REPLY.to_vec()).unwrap()), &reader_stop).is_err() { break; }
-                            if !emit(&output, Output::Ready, &reader_stop) { break; }
                         }
+                        let ready = readiness.push(&bytes);
                         if !bytes.is_empty() && !emit(&output, Output::Bytes(bytes), &reader_stop) { break; }
+                        if ready && !emit(&output, Output::Ready, &reader_stop) { break; }
                     }
                     Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => std::thread::sleep(Duration::from_millis(2)),
                     Err(_) => break,
