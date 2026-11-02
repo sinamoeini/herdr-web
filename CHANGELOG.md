@@ -4,6 +4,13 @@
 
 The initial release is in preparation. No binary release is published yet.
 
+### Added
+
+- Select the remote web port in the machine dialog and view each connection's port.
+- Connect to separate Herdr Web instances on one SSH host and disconnect each forward independently.
+- Run opt-in acceptance against an existing isolated remote instance with `test/ssh_remote.py`.
+- Record the native focus limit, required upstream change, and browser lifecycle coverage for original Herdr 0.9.5.
+
 ### Fixed
 
 Ctrl+L now reaches the focused terminal, so the shell can clear the screen.

@@ -120,14 +120,26 @@ Read-only file previews accept regular UTF-8 files up to 512 KiB, rejecting bina
 
 The listener binds **127.0.0.1 only**. Host accepts only parsed localhost/127.0.0.1/[::1] authorities; supplied Origins must match exactly. POST/WebSocket upgrades require matching Origin; JSON mutations need JSON Content-Type. Ordinary bodies cap at 16 KiB. Responses carry no-store/nosniff/CSP protections. The application has the local user's terminal/file privileges: public/shared hosting requires a separate authentication design and is unsupported.
 
-Remote machines must already run Herdr Web. The machine picker creates an owned noninteractive SSH forward using existing keys/known-host records and strict host-key checks, targeting remote loopback. Maximum eight forwards. Instances open in **separate windows**, not a merged sidebar. Disconnect/shutdown reaps only owned forwards, not remote services. Manual equivalent:
+Remote machines must already run Herdr Web. The machine picker creates an owned noninteractive SSH forward using existing keys/known-host records and strict host-key checks, targeting remote loopback. Maximum eight forwards. Instances open in **separate windows**, not a merged sidebar. Disconnect/shutdown reaps only owned forwards, not remote services.
+
+The dialog's remote web port defaults to 8004.
+It accepts integers from 1 to 65535 and rejects invalid values before SSH starts.
+SSH uses the SSH port from your existing configuration.
+The connection list shows each host and remote web port.
+Its Disconnect control removes that connection.
+Different web ports on one host use separate forwards.
+Herdr Web disables SSH connection sharing and background startup for its owned forwards.
+An existing SSH master connection stays separate.
+
+Manual equivalent:
 
 ```sh
 ssh -N -T -o BatchMode=yes -o StrictHostKeyChecking=yes \
   -o ExitOnForwardFailure=yes -L 127.0.0.1:8004:127.0.0.1:8004 -- HOST
 ```
 
-Successful external-host SSH is untested; the isolated loopback SSH fixture does not establish external-host compatibility.
+Successful external-host SSH remains untested without a supplied host.
+See [separate-host SSH acceptance](SSH-ACCEPTANCE.md) for the opt-in harness and cleanup requirements.
 
 The local HTTP/WebSocket request and response envelopes are documented in `docs/API.md`.
 

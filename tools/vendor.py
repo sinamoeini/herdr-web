@@ -178,8 +178,54 @@ def import_assets(arguments):
                 start=text.index('      } else if (["hc_missing"')
                 end=text.index('      await this.refresh();',start)
                 text=text[:start]+'      } else this.state[target] = why.message || "SSH forwarding failed";\n'+text[end:]
-                text=text.replace("A VPS, a Mac mini, a box at home: Herdr reaches it over ssh, and agents there keep running while your laptop sleeps.","Connect through your existing SSH keys and known_hosts. The remote machine must already run Herdr Web on loopback port 8004. It opens in a separate browser window; spaces are not combined.")
+                text=text.replace("A VPS, a Mac mini, a box at home: Herdr reaches it over ssh, and agents there keep running while your laptop sleeps.","Use your existing SSH keys and known_hosts. The remote machine must already run Herdr Web on loopback. Each connection opens a separate browser window.")
+                text=text.replace('    this.input = InputState.new', '''    this.port = InputState.new({ value: "8004" });
+    this.portError = "";
+    this.port.on("change", (_e, cx) => { this.portError = ""; cx.notify(); });
+    this.port.on("submit", (_e, cx) => this.add(this.typed, cx));
+    this.input = InputState.new''', 1)
+                text=text.replace('      cx.timer.after(600, () => this.input.focus());', '')
+                text=text.replace('    return this.added.some((m) => m.target === target || m.name === target || m.host === target);',
+                                  '    return this.added.some((m) => m.host === target && m.port === Number(this.port.value()));')
+                text=text.replace('    target = target.trim();', '''    const rawPort = this.port.value().trim();
+    const port = Number(rawPort);
+    if (!/^[0-9]+$/.test(rawPort) || !Number.isInteger(port) || port < 1 || port > 65535) {
+      this.portError = "Enter a remote web port from 1 to 65535.";
+      cx.notify();
+      return;
+    }
+    this.portError = "";
+    target = target.trim();''', 1)
+                text=text.replace('["machine", "add", target, "--json"]', '["machine", "add", target, "--port", String(port), "--json"]')
+                text=text.replace('.child("Added")', '.child(`Connected · web port ${this.port.value()}`)')
+                text=text.replace('  render() {', '''  connections(t) {
+    return v_flex().id("ma-connections").gap(6).children(this.added.map(m =>
+      h_flex().gap(8).items_center()
+        .child(div().flex_1().text_size(12).child(`${m.host} · remote web port ${m.port}`))
+        .child(div().id(`ma-disconnect-${m.host}-${m.port}`).cursor_pointer().text_size(12)
+          .on_click((_e, cx) => cx.spawn(async cx => {
+            const r = await hc(["machine", "disconnect", m.host, "--port", String(m.port)]);
+            if (r.code) this.portError = r.stderr;
+            await this.refresh(); cx.notify();
+          })).child("Disconnect"))
+    ));
+  }
+
+  render() {''')
+                text=text.replace('      .child(div().pt(16).pb(6)', '''      .child(v_flex().pt(12).gap(6)
+        .child(div().text_size(12).child("Remote web port"))
+        .child(Input.new(this.port).attr("aria-label", "Remote web port").attr("inputmode", "numeric")
+          .attr("aria-describedby", "ma-port-help").attr("aria-invalid", String(Boolean(this.portError)))
+          .h(34).px(10).rounded(8).border_1().border_color(t.input).bg(t.background).text_color(t.foreground))
+        .child(div().id("ma-port-help").text_size(12).text_color(t.muted)
+          .child("Default: 8004. SSH uses the port in your SSH configuration."))
+        .when(Boolean(this.portError), el => el.child(div().id("ma-port-error").attr("role", "alert")
+          .text_size(12).text_color(t.blocked).child(this.portError))))
+      .child(this.connections(t))
+      .child(div().pt(16).pb(6)''', 1)
+                text=text.replace('Input.new(this.input)', 'Input.new(this.input).attr("aria-label", "SSH destination")')
                 changes.append("SSH failures describe browser forwarding requirements rather than native core setup")
+                changes.append("validated remote web port, port-specific connection status and disconnect controls")
             if source == "defaults/mods/changes/main.js":
                 text = text.replace('"Commit"', '"Stage all & commit"')
                 text = text.replace('  setLines(lines) {', '  setLines(lines) {\n    lines = lines.slice(0, 1500);')

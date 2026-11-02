@@ -63,4 +63,8 @@ The decoder validates/skips legacy tag-19 `PaneSurfacePatch` text-only updates. 
 
 Browser selections are independent and issue no public focus RPC. However, pinned `src/server/headless/endpoint_requests.rs` and `client_views.rs` route native connection tab selection through `set_default_shell_target_from_client`. Thus native graphics may change the public snapshot's default-focus fields. The strict guarantee that these fields never change is **not met by this backend**. The port neither races to restore global focus nor patches/upgrades the user's Herdr installation. Existing valid browser selections remain local.
 
+[The native focus decision](docs/NATIVE-FOCUS.md) records the protocol investigation, rejected alternatives, required upstream operation, and lifecycle assertions.
+The machine dialog adapts the upstream panel through `tools/vendor.py` and retains its provenance record.
+It adds a validated web port, connection status, and port-specific disconnect controls.
+
 `docs/ACCEPTANCE.md` lists scoped evidence and remaining checks rather than claiming full feature parity. External-host SSH remains untested (the real isolated loopback SSH fixture passes). `docs/OPERATIONS.md` describes generic installation, rollback, and the host-reboot distinction.

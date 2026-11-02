@@ -171,8 +171,11 @@ export async function knownAgents(){const installed=await request("/api/agents")
 export async function hc(args){
   if(args.join(" ")==="machine ls --json")return {code:0,stdout:JSON.stringify({machines:(await request("/api/machines")).map(value=>({...value,name:value.host,target:value.host,connected:true,temporary:false}))}),stderr:""};
   if(args[0]==="machine"&&["add","connect","rm","disconnect"].includes(args[1])&&typeof args[2]==="string"){
-    const connect=["add","connect"].includes(args[1]);const opened=connect?globalThis.open("about:blank","_blank"):null;
-    try{const value=await request("/api/machines",{action:connect?"connect":"disconnect",host:args[2]});if(opened){opened.opener=null;opened.location=value.url;}else if(connect)model.hooks.notice(`Forward ready at ${value.url}. Allow a new browser window to open it.`);return {code:0,stdout:JSON.stringify(value),stderr:""};}
+    const connect=["add","connect"].includes(args[1]),index=args.indexOf("--port");
+    const port=index<0?undefined:Number(args[index+1]);
+    if(index>=0&&(!/^[0-9]+$/.test(args[index+1]||"")||!Number.isInteger(port)||port<1||port>65535))return {code:1,stdout:"",stderr:"Enter a remote web port from 1 to 65535."};
+    const opened=connect?globalThis.open("about:blank","_blank"):null;
+    try{const value=await request("/api/machines",{action:connect?"connect":"disconnect",host:args[2],...(port===undefined?{}:{port})});if(opened){opened.opener=null;opened.location=value.url;}else if(connect)model.hooks.notice(`Connected to ${value.host}, remote web port ${value.port}, at ${value.url}. Allow a new browser window to open it.`);return {code:0,stdout:JSON.stringify(value),stderr:""};}
     catch(error){opened?.close();return {code:1,stdout:JSON.stringify({error:{message:error.message}}),stderr:error.message};}
   }
   throw new Error(`Native desktop command is unavailable: ${args.join(" ")}`);
