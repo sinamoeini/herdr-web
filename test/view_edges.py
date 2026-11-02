@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Real independent views and parked-preview input, including native focus scope."""
 
+import base64
 import json
 import pathlib
 import uuid
 
 from harness import Fixture, wait_for, wait_for_browser
 from playwright.sync_api import sync_playwright
+from graphics_browser import PIXELS
 
 
 GRAPHICS = '''
@@ -65,8 +67,7 @@ def main():
                     target.goto(fixture.url)
                     target.locator('[id=' + json.dumps('space-' + space) + ']').click()
                     target.locator('[id=' + json.dumps('tab-' + tab) + ']').click()
-                    actual = target.evaluate('async()=>{const {model}=await import("/desktop/runtime/herdr.js");return {selected:model.selected,tabs:model.snapshot.tabs};}')
-                    assert actual['selected']['tab'] == tab, {'requested': tab, 'actual': actual}
+                    wait_for_browser(target, 'async tab=>(await import("/desktop/runtime/herdr.js")).model.selected.tab===tab', arg=tab)
                     target.wait_for_function('pane=>graphicsSeen[pane]===true', arg=pane,timeout=15000)
                     target.wait_for_selector('.terminal-pane[data-pane=' + json.dumps(pane) + '][data-ready="true"]', timeout=20000)
 
@@ -78,8 +79,32 @@ def main():
                     default_before = fixture.rpc('session.snapshot')['snapshot'].get('focused_tab_id')
                     select(other, second['workspace']['workspace_id'], second['tab']['tab_id'], second['root_pane']['pane_id'])
                     default_after = fixture.rpc('session.snapshot')['snapshot'].get('focused_tab_id')
-                    assert page.evaluate('async()=>(await import("/desktop/runtime/herdr.js")).model.selected.tab') == first['tab']['tab_id']
+                    # Pin the actual generation-1 limitation, not a false no-focus guarantee.
+                    assert default_before == first['tab']['tab_id']
+                    assert default_after == second['tab']['tab_id']
+                    assert default_before != default_after
                     assert other.evaluate('async()=>(await import("/desktop/runtime/herdr.js")).model.selected.tab') == second['tab']['tab_id']
+                    focus_stages = {'created_first': default_before, 'created_second': default_after}
+                    sequence = '\x1b_Ga=T,f=32,s=8,v=8,t=d,q=2,i=4545,c=2,r=2;' + base64.b64encode(bytes([255,0,0,255])*64).decode() + '\x1b\\'
+                    fixture.post('/api/terminal-launch', {'pane': first['root_pane']['pane_id'], 'argv': ['python3', '-c', 'import sys;sys.stdout.write('+repr(sequence)+');sys.stdout.flush()']})
+                    page.wait_for_function('()=>('+PIXELS+')().red>0', timeout=15000)
+                    for stage in ['resize', 'reconnect', 'dispose']:
+                        if stage == 'resize':
+                            other.set_viewport_size({'width': 1100, 'height': 760})
+                        elif stage == 'reconnect':
+                            other.reload()
+                            other.wait_for_function('pane=>graphicsSeen[pane]===true', arg=second['root_pane']['pane_id'], timeout=15000)
+                            other.wait_for_selector('.terminal-pane[data-pane='+json.dumps(second['root_pane']['pane_id'])+'][data-ready="true"]')
+                        else:
+                            other.goto('about:blank')
+                        # Sample through the asynchronous native resize/disposal interval.
+                        for _ in range(5):
+                            page.wait_for_timeout(100)
+                            assert fixture.rpc('session.snapshot')['snapshot']['focused_tab_id'] == default_after
+                            assert page.evaluate('async()=>(await import("/desktop/runtime/herdr.js")).model.selected.tab') == first['tab']['tab_id']
+                            assert page.evaluate('()=>('+PIXELS+')().red') > 0
+                        focus_stages[stage] = default_after
+                    assert page.evaluate('async()=>(await import("/desktop/runtime/herdr.js")).model.selected.tab') == first['tab']['tab_id']
                     assert not any(command['method'] in {'workspace.focus', 'tab.focus', 'pane.focus', 'pane.focus_direction'} for command in commands), commands
                     fixture.post('/api/terminal-action', {'action': 'park', 'terminal': terminal})
                     fixture.post('/api/terminal-action', {'action': 'park', 'terminal': terminal})
@@ -105,7 +130,7 @@ def main():
                     fixture.post('/api/terminal-action', {'action': 'kill', 'terminal': terminal, 'confirmed': True})
                     assert fixture.rpc('pane.process_info', {'pane_id': spare['root_pane']['pane_id']})['process_info']['shell_pid']
                     assert not errors, errors
-                    results[name] = {'version': browser.version, 'independent_views_after_native_graphics_ready': True, 'no_public_focus_mutations': True, 'native_default_before': default_before, 'native_default_after': default_after, 'native_default_changed': default_before != default_after, 'park_preview_input_keep_and_confirmed_kill': True, 'preserved_shell_pid': original_pid}
+                    results[name] = {'version': browser.version, 'independent_views_after_native_graphics_ready': True, 'no_public_focus_mutations': True, 'native_default_focus_stages': focus_stages, 'native_default_changed': True, 'focus_preservation': 'unsupported by original Herdr 0.9.5 generation 1', 'inline_image_survives_other_view_lifecycle': True, 'park_preview_input_keep_and_confirmed_kill': True, 'preserved_shell_pid': original_pid}
                 except Exception:
                     try:
                         snapshot=fixture.rpc('session.snapshot')['snapshot']

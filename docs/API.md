@@ -26,6 +26,14 @@ IDs are opaque and distinct. Never substitute a terminal ID for a pane ID, or a 
 | `POST /api/machines` | `{action:"connect",host,port?}` | `{host,port,local_port,url,pid}`, only after forwarding readiness; port defaults to 8004 |
 | `POST /api/machines` | `{action:"disconnect",host,port?}` | `{disconnected:true}` or `{disconnected:false}` |
 
+An SSH destination uses the host and remote web port as its connection identity.
+Repeated connects to that pair return the existing forward.
+Different web ports on the same host use separate forwards.
+An explicit disconnect port removes only that pair.
+For compatibility, a host-only disconnect removes all owned forwards for that host.
+The remote web port accepts integers from 1 to 65535.
+It does not change the SSH port from the existing SSH configuration.
+
 `/api/state` falls back to an existing focused/first tab when the requested tab was removed. Reading another tab's layout does not focus it globally. File paths/cwd must be bounded absolute paths. Terminal actions are `park`, `keep`, or `kill`; only intentional kill with `confirmed:true` is accepted. Program names must be installed catalog entries. Explicit launch arguments are quoted individually, not executed as a server-side script.
 
 ## Allowlisted commands

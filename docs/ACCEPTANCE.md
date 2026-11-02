@@ -20,6 +20,41 @@ asset upgrade.
 
 ## Environment and evidence
 
+### Machine enhancements, November 2, 2026
+
+The expanded `ssh.py` suite passes locally with original Herdr 0.9.5.
+Chromium 153.0.8010.12 and Firefox 157.0 exercise the actual machine dialog.
+Both retain the default 8004 value and send two selected nondefault web ports unchanged.
+Invalid values produce a visible error without an HTTP request, popup, or SSH process.
+The connection list names each remote port.
+Disconnect removes the selected forward and preserves the other port.
+
+The loopback fixture uses strict generated host keys and a separately owned SSH master.
+Herdr Web ignores connection-sharing and background-startup configuration for its forwards.
+The separate master survives disconnect and web shutdown.
+Host-only API disconnect retains its compatibility behavior and removes all owned ports for that host.
+
+The opt-in `ssh_remote.py` harness passes against an independent local target service through real SSH.
+It tests HTTP, disposable terminal input, disconnect, reconnect, and local web shutdown.
+The remote shell retains its process ID and test variable.
+Cleanup removes the test workspace and owned forwards while preserving a preexisting terminal.
+An injected assertion failure also passes those cleanup assertions.
+No separate host was supplied, so external topology remains explicitly untested.
+
+The expanded `view_edges.py` suite passes in both browsers.
+It requires the observed native default-focus change on the pinned backend.
+Resize, reconnect, and disposal preserve the other browser's selection and real inline image pixels.
+The test rejects compensating public focus requests.
+[The architecture decision](NATIVE-FOCUS.md) records the missing upstream operation.
+Strict backend default-focus preservation remains unresolved.
+
+The complete native graphics suite passes in both browsers.
+The locked Rust suite passes all 38 tests.
+Python maintenance tests pass 18 tests and skip 12 macOS-only tests.
+The plugin manifest, repeatable asset import, provenance, and release build pass.
+These results describe local targeted acceptance.
+The PR records its separate CI outcome.
+
 ### Git commit identity, November 2, 2026
 
 The integration test for issue #4 runs through `services.py` against the real `/api/git` route.

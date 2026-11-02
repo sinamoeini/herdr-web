@@ -19,7 +19,9 @@ pub fn validate(value: &Value) -> Result<Destination> {
 }
 
 pub fn arguments(destination: &Destination, local_port: u16) -> Vec<String> {
-    ["-N", "-T", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "ExitOnForwardFailure=yes", "-o", "ConnectTimeout=8", "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=3", "-L"]
+    ["-N", "-T", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "ExitOnForwardFailure=yes",
+        "-o", "ControlMaster=no", "-o", "ControlPath=none", "-o", "ForkAfterAuthentication=no",
+        "-o", "ConnectTimeout=8", "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=3", "-L"]
         .into_iter().map(str::to_owned).chain([
             format!("127.0.0.1:{local_port}:127.0.0.1:{}", destination.port), "--".into(), destination.host.clone(),
         ]).collect()
@@ -27,16 +29,26 @@ pub fn arguments(destination: &Destination, local_port: u16) -> Vec<String> {
 
 struct Tunnel{child:Option<Child>,info:Value,diagnostics:tokio::task::JoinHandle<()>,_permit:Option<OwnedSemaphorePermit>}
 impl Drop for Tunnel{fn drop(&mut self){self.diagnostics.abort();if let Some(mut child)=self.child.take(){let permit=self._permit.take();let _=child.start_kill();tokio::spawn(async move{let _permit=permit;let _=child.wait().await;});}}}
-pub struct Machines{tunnels:Arc<Mutex<BTreeMap<String,Tunnel>>>,capacity:Arc<Semaphore>,shutdown:watch::Receiver<bool>}
+pub struct Machines{tunnels:Arc<Mutex<BTreeMap<(String,u16),Tunnel>>>,capacity:Arc<Semaphore>,shutdown:watch::Receiver<bool>}
 impl Machines{
     pub fn new(shutdown:watch::Receiver<bool>)->Self{Self{tunnels:Arc::new(Mutex::new(BTreeMap::new())),capacity:Arc::new(Semaphore::new(8)),shutdown}}
     pub async fn catalog(&self)->Value{let mut tunnels=self.tunnels.lock().await;tunnels.retain(|_,tunnel|tunnel.child.as_mut().is_some_and(|child|matches!(child.try_wait(),Ok(None))));json!(tunnels.values().map(|tunnel|tunnel.info.clone()).collect::<Vec<_>>())}
     pub async fn action(&self,value:&Value)->Result<Value>{
         let destination=validate(value)?;
+        let key=(destination.host.clone(),destination.port);
         self.catalog().await;
-        if value["action"]=="disconnect"{let removed=self.tunnels.lock().await.remove(&destination.host);if let Some(mut tunnel)=removed{if let Some(mut child)=tunnel.child.take(){let _=child.start_kill();let _=child.wait().await;}return Ok(json!({"disconnected":true}));}return Ok(json!({"disconnected":false}));}
+        if value["action"]=="disconnect"{
+            let removed={
+                let mut catalog=self.tunnels.lock().await;
+                let keys=catalog.keys().filter(|(host,port)|host==&destination.host&&(value.get("port").is_none()||*port==destination.port)).cloned().collect::<Vec<_>>();
+                keys.into_iter().filter_map(|key|catalog.remove(&key)).collect::<Vec<_>>()
+            };
+            let disconnected=!removed.is_empty();
+            for mut tunnel in removed{if let Some(mut child)=tunnel.child.take(){let _=child.start_kill();let _=child.wait().await;}}
+            return Ok(json!({"disconnected":disconnected}));
+        }
         if *self.shutdown.borrow(){return Err(Error::unavailable("server stopping"));}
-        if let Some(tunnel)=self.tunnels.lock().await.get(&destination.host){return Ok(tunnel.info.clone());}
+        if let Some(tunnel)=self.tunnels.lock().await.get(&key){return Ok(tunnel.info.clone());}
         let permit=self.capacity.clone().try_acquire_owned().map_err(|_|Error::unavailable("eight SSH forwards are already active"))?;
         let tunnels=self.tunnels.clone();let mut shutdown=self.shutdown.clone();
         let (mut reply,answer)=tokio::sync::oneshot::channel();
@@ -60,10 +72,10 @@ impl Machines{
                 if let Err(error)=result{if let Some(mut child)=tunnel.child.take(){let _=child.start_kill();let _=tokio::time::timeout(Duration::from_secs(2),child.wait()).await;}let _=tokio::time::timeout(Duration::from_millis(500),&mut tunnel.diagnostics).await;let details=String::from_utf8_lossy(&diagnostic.lock().await).to_string();return Err(Error::backend(format!("{error}: {details}. Check SSH keys, known_hosts, and the remote loopback listener; host-key checks remain strict.")));}
                 let mut catalog=tunnels.lock().await;
                 if *shutdown.borrow(){return Err(Error::unavailable("server stopped while SSH was connecting"));}
-                if let Some(existing)=catalog.get(&destination.host){return Ok(existing.info.clone());}
-                registered=info["pid"].as_u64();catalog.insert(destination.host.clone(),tunnel);Ok(info)
+                if let Some(existing)=catalog.get(&key){return Ok(existing.info.clone());}
+                registered=info["pid"].as_u64();catalog.insert(key.clone(),tunnel);Ok(info)
             }.await;
-            if reply.send(result).is_err(){if let Some(pid)=registered{let mut catalog=tunnels.lock().await;if catalog.get(&destination.host).is_some_and(|tunnel|tunnel.info["pid"]==pid){catalog.remove(&destination.host);}}}
+            if reply.send(result).is_err(){if let Some(pid)=registered{let mut catalog=tunnels.lock().await;if catalog.get(&key).is_some_and(|tunnel|tunnel.info["pid"]==pid){catalog.remove(&key);}}}
         });
         answer.await.map_err(|_|Error::unavailable("SSH supervisor ended"))?
     }
@@ -89,12 +101,19 @@ mod tests {
         for host in ["-oProxyCommand=evil", "user@host;evil", "host name", "[::1]", "@host", "user@", "a@b@c", "host\n"] {
             assert!(validate(&json!({"action":"connect", "host":host})).is_err());
         }
-        for port in [0, 65536, -1] {
+        for port in [json!(0), json!(65536), json!(-1), json!(1.5), json!("8004"), Value::Null, json!(true)] {
             assert!(validate(&json!({"action":"connect", "host":"test-host", "port":port})).is_err());
         }
         let destination = validate(&json!({"action":"connect", "host":"user@test-host", "port":8004})).unwrap();
+        assert_eq!(validate(&json!({"action":"connect","host":"test-host"})).unwrap().port,8004);
+        for port in [1,65535]{
+            assert_eq!(validate(&json!({"action":"connect","host":"test-host","port":port})).unwrap().port,port as u16);
+        }
         let arguments = arguments(&destination, 12345);
         assert!(arguments.iter().any(|argument| argument == "StrictHostKeyChecking=yes"));
+        for argument in ["ControlMaster=no","ControlPath=none","ForkAfterAuthentication=no"]{
+            assert!(arguments.iter().any(|value|value==argument));
+        }
         assert_eq!(&arguments[arguments.len()-2..], &["--", "user@test-host"]);
     }
 }

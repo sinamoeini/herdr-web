@@ -36,6 +36,10 @@ export default class MachineAdd extends View {
     this.added = [];
     this.state = {}; // target -> "adding" | "terminal" | error text
     this.typed = "";
+    this.port = InputState.new({ value: "8004" });
+    this.portError = "";
+    this.port.on("change", (_e, cx) => { this.portError = ""; cx.notify(); });
+    this.port.on("submit", (_e, cx) => this.add(this.typed, cx));
     this.input = InputState.new({ placeholder: "user@host" });
     this.input.on("change", (_e, cx) => { this.typed = this.input.value(); cx.notify(); });
     this.input.on("submit", (_e, cx) => this.add(this.typed, cx));
@@ -44,7 +48,7 @@ export default class MachineAdd extends View {
     this.input.on("blur", (_e, cx) => { this.inputFocused = false; cx.notify(); });
     if (this.webProps?.part !== "bar") {
       this.input.focus();
-      cx.timer.after(600, () => this.input.focus());
+
     }
     this.macs = {}; // target -> { name, core } for an added Mac
     this.opened = {};
@@ -79,16 +83,24 @@ export default class MachineAdd extends View {
   }
 
   isAdded(target) {
-    return this.added.some((m) => m.target === target || m.name === target || m.host === target);
+    return this.added.some((m) => m.host === target && m.port === Number(this.port.value()));
   }
 
   add(target, cx) {
+    const rawPort = this.port.value().trim();
+    const port = Number(rawPort);
+    if (!/^[0-9]+$/.test(rawPort) || !Number.isInteger(port) || port < 1 || port > 65535) {
+      this.portError = "Enter a remote web port from 1 to 65535.";
+      cx.notify();
+      return;
+    }
+    this.portError = "";
     target = target.trim();
     if (!target || this.state[target] === "adding") return;
     this.state[target] = "adding";
     cx.notify();
     cx.spawn(async (cx) => {
-      const r = await hc(["machine", "add", target, "--json"]).catch((e) => ({ code: 1, stderr: String(e), stdout: "" }));
+      const r = await hc(["machine", "add", target, "--port", String(port), "--json"]).catch((e) => ({ code: 1, stderr: String(e), stdout: "" }));
       let why = null;
       try {
         why = r.code === 0 ? null : (JSON.parse(r.stdout || r.stderr).error ?? { message: (r.stderr || r.stdout).trim() });
@@ -236,7 +248,7 @@ export default class MachineAdd extends View {
     const st = this.state[target];
     const done = this.isAdded(target);
     const right = done
-      ? h_flex().gap(5).items_center().text_size(12).text_color(t.ansi2).child(svg(I("circle-check")).size(13)).child("Added")
+      ? h_flex().gap(5).items_center().text_size(12).text_color(t.ansi2).child(svg(I("circle-check")).size(13)).child(`Connected · web port ${this.port.value()}`)
       : st === "adding"
         ? h_flex().gap(6).items_center().text_size(12).text_color(t.muted).child(svg(I("spinner")).size(12).text_color(t.working).spin(900)).child("Connecting")
         : st === "terminal"
@@ -279,6 +291,19 @@ export default class MachineAdd extends View {
       .when(Boolean(this.macs[target]), (el) => el.child(this.macCard(t, target)));
   }
 
+  connections(t) {
+    return v_flex().id("ma-connections").gap(6).children(this.added.map(m =>
+      h_flex().gap(8).items_center()
+        .child(div().flex_1().text_size(12).child(`${m.host} · remote web port ${m.port}`))
+        .child(div().id(`ma-disconnect-${m.host}-${m.port}`).cursor_pointer().text_size(12)
+          .on_click((_e, cx) => cx.spawn(async cx => {
+            const r = await hc(["machine", "disconnect", m.host, "--port", String(m.port)]);
+            if (r.code) this.portError = r.stderr;
+            await this.refresh(); cx.notify();
+          })).child("Disconnect"))
+    ));
+  }
+
   render() {
     const t = theme();
     if (this.webProps?.part === "bar") return this.bar(t);
@@ -299,8 +324,18 @@ export default class MachineAdd extends View {
           .text_size(12.8)
           .line_height("19px")
           .text_color(t.muted)
-          .child("Connect through your existing SSH keys and known_hosts. The remote machine must already run Herdr Web on loopback port 8004. It opens in a separate browser window; spaces are not combined."),
+          .child("Use your existing SSH keys and known_hosts. The remote machine must already run Herdr Web on loopback. Each connection opens a separate browser window."),
       )
+      .child(v_flex().pt(12).gap(6)
+        .child(div().text_size(12).child("Remote web port"))
+        .child(Input.new(this.port).attr("aria-label", "Remote web port").attr("inputmode", "numeric")
+          .attr("aria-describedby", "ma-port-help").attr("aria-invalid", String(Boolean(this.portError)))
+          .h(34).px(10).rounded(8).border_1().border_color(t.input).bg(t.background).text_color(t.foreground))
+        .child(div().id("ma-port-help").text_size(12).text_color(t.muted)
+          .child("Default: 8004. SSH uses the port in your SSH configuration."))
+        .when(Boolean(this.portError), el => el.child(div().id("ma-port-error").attr("role", "alert")
+          .text_size(12).text_color(t.blocked).child(this.portError))))
+      .child(this.connections(t))
       .child(div().pt(16).pb(6).text_size(11.5).font_medium().text_color(t.dim).child(hosts.length ? "From your ssh config" : "Your ssh config lists no hosts"))
       .child(
         v_flex()
@@ -320,7 +355,7 @@ export default class MachineAdd extends View {
         h_flex()
           .gap(8)
           .child(
-            Input.new(this.input)
+            Input.new(this.input).attr("aria-label", "SSH destination")
               .flex_1()
               .h(34)
               .px(10)

@@ -1489,11 +1489,12 @@
       "destination": "mods/machine-add/main.js",
       "commit": "e12fd31866f33cb613922d0b33ea506e6f23ce3c",
       "original_sha256": "4a6fca2879a4d0f2b03fb0b5f8e3acc934cbfe83acf2eb0208047d1a0ec5c21e",
-      "adapted_sha256": "636d14974bbb3c79c0de7e4b1eb4f4a00d65c6077ef8097d25717fa919753fd0",
+      "adapted_sha256": "dee2d0f18f443203160e93aee7958cb9f9232a1828e611b2d4a122ca6eace6ae",
       "changes": [
         "bare runtime imports rewritten",
         "ambient props replaced by instance-owned webProps",
-        "SSH failures describe browser forwarding requirements rather than native core setup"
+        "SSH failures describe browser forwarding requirements rather than native core setup",
+        "validated remote web port, port-specific connection status and disconnect controls"
       ]
     },
     {
