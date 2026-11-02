@@ -5,12 +5,37 @@ import pathlib
 import time
 
 from harness import BINARY, Fixture, wait_for
+from frontend_regressions import run_frontend_regressions
 from playwright.sync_api import expect, sync_playwright
+
+
+def terminal_clear_shortcut(page, fixture, pane):
+    terminal = page.locator(f'.terminal-pane[data-pane="{pane}"]')
+    expect(terminal).to_have_attribute('data-ready', 'true')
+    terminal.locator('.xterm-helper-textarea').focus()
+    page.keyboard.type("printf 'SHORTCUT_%s\\n' BEFORE_CLEAR")
+    page.keyboard.press('Enter')
+    wait_for(lambda: 'SHORTCUT_BEFORE_CLEAR' in fixture.read(pane))
+    page.keyboard.press('Control+l')
+    wait_for(lambda: 'SHORTCUT_BEFORE_CLEAR' not in fixture.read(pane), timeout=5)
+    expect(terminal.locator('.xterm-helper-textarea')).to_be_focused()
+    page.keyboard.type("printf 'SHORTCUT_%s\\n' AFTER_CLEAR")
+    page.keyboard.press('Enter')
+    wait_for(lambda: 'SHORTCUT_AFTER_CLEAR' in fixture.read(pane))
 
 
 def main():
     results={}
-    with Fixture('ui') as fixture:
+    fixture=Fixture('ui')
+    agents=fixture.root/'bin';agents.mkdir()
+    agent=agents/'codex'
+    agent.write_text("#!/bin/sh\nprintf 'CHILD_%s\\n' AGENT_READY\nexec /bin/bash --noprofile --norc\n")
+    agent.chmod(0o700)
+    shell=agents/'bash'
+    shell.write_text('#!/bin/sh\nexec /bin/bash --noprofile --norc "$@"\n')
+    shell.chmod(0o700)
+    fixture.environment['PATH']=str(agents)+os.pathsep+fixture.environment.get('PATH','')
+    with fixture:
         mods=fixture.root/'mods';notes=mods/'notes';notes.mkdir(parents=True)
         (notes/'main.js').write_text('import {View,div} from "/desktop/runtime/gpui.js"; export default class Notes extends View { init(){this.tick=0;this.interval(()=>{this.tick++;this.notify();},100);}render(){return div().id("trusted-notes").child("Trusted notes "+this.tick);} }')
         fixture.web.terminate();fixture.web.wait(timeout=20)
@@ -51,6 +76,7 @@ def main():
                     page.wait_for_selector('.xterm-helper-textarea',state='attached')
                     snapshot=wait_for(lambda:fixture.rpc('session.snapshot')['snapshot'] if fixture.rpc('session.snapshot')['snapshot']['panes'] else None)
                     workspace=snapshot['workspaces'][0]['workspace_id'];tab=snapshot['tabs'][0]['tab_id'];pane=snapshot['panes'][0]['pane_id']
+                    terminal_clear_shortcut(page, fixture, pane)
                     second=fixture.post('/api/command',{'method':'workspace.create','params':{'label':'Other space','focus':False}})
                     second_tab=fixture.post('/api/command',{'method':'tab.create','params':{'workspace_id':workspace,'label':'Other tab','focus':False}})['tab']['tab_id']
                     page.wait_for_selector(f'[id="tab-{second_tab}"]')
@@ -196,14 +222,16 @@ def main():
                     assert all(command['params'].get('focus') is False for command in commands if command['method'] in {'workspace.create','tab.create','pane.split'}),commands
                     current_panes={item['pane_id'] for item in fixture.rpc('session.snapshot')['snapshot']['panes']}
                     assert previous_panes < current_panes and len(current_panes)==len(previous_panes)+1
+                    regressions=run_frontend_regressions(page,fixture)
+                    assert not any(command['method'] in {'workspace.focus','tab.focus','pane.focus','pane.focus_direction'} for command in commands),commands
                     page.screenshot(path=str(fixture.logs/f'{name}-desktop.png'))
                     errors.extend(page.evaluate('webPanelErrors'))
                     assert not errors,errors
-                    results[name]={'version':browser.version,'empty_create':True,'context_target_and_coordinates':True,'rename_cancel':True,'palette_theme':True,'privacy':True,'file_highlight':True,'personal_layout_and_trusted_panel_reload':True,'layout_download_and_delete':True,'herdr98_games_drag_and_clippy':True,'herdr98_run_real_terminal':True,'split_selects_and_focuses_locally':True,'no_public_focus_mutations':True,'native_default_focus_observed':[backend_focus,backend_focus_after],'errors':errors}
+                    results[name]={'version':browser.version,'empty_create':True,'context_target_and_coordinates':True,'rename_cancel':True,'palette_theme':True,'privacy':True,'file_highlight':True,'personal_layout_and_trusted_panel_reload':True,'layout_download_and_delete':True,'herdr98_games_drag_and_clippy':True,'herdr98_run_real_terminal':True,'split_selects_and_focuses_locally':True,'no_public_focus_mutations':True,'native_default_focus_observed':[backend_focus,backend_focus_after],'frontend_regressions':regressions,'errors':errors}
                 except Exception:
                     try:
                         state=page.evaluate('''async()=>{const api=await import("/desktop/runtime/herdr.js");return {selected:api.model.selected,trace:globalThis.webFocusTrace,active:document.activeElement?.outerHTML.slice(0,200),active_pane:document.activeElement?.closest(".terminal-pane")?.dataset.pane,panes:[...document.querySelectorAll(".terminal-pane")].map(el=>({...el.dataset,rect:el.getBoundingClientRect().toJSON()})),overlays:[...document.querySelectorAll(".web-dialog,.web-popup,dialog[open]")].map(el=>el.outerHTML.slice(0,150)),notices:document.querySelector("#notifications").innerText};}''')
-                        state.update(selected_before_split=selected_before_split,expected_split_pane=selected_pane)
+                        state.update(selected_before_split=selected_before_split,expected_split_pane=selected_pane,commands=commands[-100:],backend=fixture.rpc('session.snapshot')['snapshot'])
                         (fixture.logs/f'{name}-state.json').write_text(json.dumps(state,indent=2))
                     except Exception as capture:print('Failure state capture:',capture,flush=True)
                     try:page.screenshot(path=str(fixture.logs/f'{name}-failure.png'),timeout=5000)

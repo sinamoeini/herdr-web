@@ -29,6 +29,7 @@ button{cursor:pointer;font:inherit;border:1px solid var(--border,#555);border-ra
 .split-divider.vertical{cursor:col-resize;transform:translateX(-4px);}
 .split-divider.horizontal{cursor:row-resize;transform:translateY(-4px);}
 .split-divider:hover{background:var(--accent);opacity:.4;}
+.split-divider:focus-visible{background:var(--accent);outline:2px solid var(--ring);outline-offset:1px;}
 .empty-session{height:100%;display:flex;align-items:center;justify-content:center;gap:16px;color:var(--muted);}
 .web-dialog{position:fixed;display:flex;flex-direction:column;z-index:9000;max-height:calc(100vh - 24px);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 20px 90px #000c;background:var(--popover);}
 .web-dialog > [id]{flex:1;min-height:0;}

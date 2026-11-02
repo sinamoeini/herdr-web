@@ -108,11 +108,17 @@ const statusOf=value=>({waiting:"blocked",error:"blocked",blocked:"blocked",comp
 export function ingest(value){
   model.snapshot=structuredClone(value.snapshot);model.home=value.home;model.backendLayout=value.layout;
   const available=model.snapshot.workspaces.filter(space=>space.label!=="__herdr_web_parked__");
+  const remembered=model.selected.tabsBySpace;
+  model.selected.tabsBySpace=Object.fromEntries(available.flatMap(space=>{
+    const tab=model.snapshot.tabs.find(tab=>tab.workspace_id===space.workspace_id&&tab.tab_id===remembered?.[space.workspace_id]);
+    return tab?[[space.workspace_id,tab.tab_id]]:[];
+  }));
   let space=available.find(space=>space.workspace_id===model.selected.space)||available.find(space=>space.workspace_id===model.snapshot.focused_workspace_id)||available[0];
   model.selected.space=space?.workspace_id;
   const tabs=model.snapshot.tabs.filter(tab=>tab.workspace_id===model.selected.space);
-  let tab=tabs.find(tab=>tab.tab_id===model.selected.tab)||tabs.find(tab=>tab.tab_id===space?.active_tab_id)||tabs[0];
+  let tab=tabs.find(tab=>tab.tab_id===model.selected.tab)||tabs.find(tab=>tab.tab_id===model.selected.tabsBySpace[space?.workspace_id])||tabs.find(tab=>tab.tab_id===space?.active_tab_id)||tabs[0];
   model.selected.tab=tab?.tab_id;
+  if(tab)model.selected.tabsBySpace[tab.workspace_id]=tab.tab_id;
   const panes=model.snapshot.panes.filter(pane=>pane.tab_id===tab?.tab_id);
   model.selected.pane=panes.find(pane=>pane.pane_id===model.selected.pane)?.pane_id||panes[0]?.pane_id;
   if(model.selected.zoom&&!panes.some(pane=>pane.pane_id===model.selected.zoom))model.selected.zoom=null;
@@ -125,9 +131,19 @@ export const shared=key=>model.shared[key];
 export function setShared(key,value){if(JSON.stringify(model.shared[key])===JSON.stringify(value))return;model.shared[key]=value;localStorage.setItem("herdr-web.shared.v1",JSON.stringify(model.shared));model.hooks.render?.();}
 export const layout=()=>model.layout;
 export const layouts=()=>["main","terminals","win98",...Object.keys(model.personal)];
-export function settings(){const value=preferences.read();return {zoom:1,font:model.layout?.font||"JetBrains Mono",font_family:value.font||model.layout?.font||"JetBrains Mono",font_size:model.layout?.font_size||14,ui_font:model.layout?.ui_font||"Geist",theme_dark:typeof value.theme==="object"?value.theme.dark||"graphite":"graphite",theme_light:typeof value.theme==="object"?value.theme.light||"paper":"paper",...value};}
+export function settings(){
+  const value=preferences.read(),choice=value.theme&&typeof value.theme==="object"?value.theme:{};
+  const legacy=typeof value.theme==="string"?value.theme:null;
+  const declared=model.layout?.theme;
+  const appearance=["light","dark"].includes(value.appearance)?value.appearance:globalThis.matchMedia?.("(prefers-color-scheme: light)").matches?"light":"dark";
+  const theme_dark=choice.dark||value.theme_dark||(legacy&&legacy!=="paper"?legacy:null)||(typeof declared==="string"&&declared!=="paper"?declared:declared?.dark)||"graphite";
+  const theme_light=choice.light||value.theme_light||declared?.light||"paper";
+  const font=value.font||model.layout?.font||"JetBrains Mono",ui_font=value.ui_font||model.layout?.ui_font||"Geist";
+  return {zoom:1,font_size:model.layout?.font_size||14,...value,font,font_family:font,ui_font,ui_font_family:ui_font,appearance,theme_dark,theme_light,
+    theme:model.layout?.theme==="win98"?"win98":appearance==="light"?theme_light:theme_dark};
+}
 export const fonts=()=>["JetBrains Mono","Geist Mono","Geist","Symbols Nerd Font","Pixelated MS Sans Serif","PxPlus IBM VGA 8x16"];
-const browserKeys=new Set(["ctrl-l","ctrl-r","ctrl-t","ctrl-w","ctrl-n","ctrl-1","ctrl-2","ctrl-3","ctrl-4","ctrl-5","ctrl-6","ctrl-7","ctrl-8","ctrl-9","ctrl-tab","ctrl-shift-tab","ctrl-pageup","ctrl-pagedown","ctrl-shift-pageup","ctrl-shift-pagedown","ctrl-shift-n","ctrl-shift-t","ctrl-shift-w","ctrl-shift-o","ctrl-shift-b","ctrl-shift-k","ctrl-shift-d","ctrl-shift-e","ctrl-+","ctrl-shift-+","ctrl-=","ctrl--","ctrl-0","alt-left","alt-right"]);
+const browserKeys=new Set(["ctrl-t","ctrl-w","ctrl-n","ctrl-1","ctrl-2","ctrl-3","ctrl-4","ctrl-5","ctrl-6","ctrl-7","ctrl-8","ctrl-9","ctrl-tab","ctrl-shift-tab","ctrl-pageup","ctrl-pagedown","ctrl-shift-pageup","ctrl-shift-pagedown","ctrl-shift-n","ctrl-shift-t","ctrl-shift-w","ctrl-shift-b","ctrl-shift-k","ctrl-shift-d","ctrl-shift-e","ctrl-+","ctrl-shift-+","ctrl-=","ctrl--","ctrl-0","alt-left","alt-right"]);
 const browserChord=event=>[event.ctrlKey||event.metaKey?"ctrl":null,event.altKey?"alt":null,event.shiftKey?"shift":null,({ArrowLeft:"left",ArrowRight:"right",ArrowUp:"up",ArrowDown:"down",PageUp:"pageup",PageDown:"pagedown"})[event.key]||event.key.toLowerCase()].filter(Boolean).join("-");
 export const reservedKey=event=>browserKeys.has(browserChord(event));
 export function keys(){const native=model.keymap||{};const result=Object.entries(native).flatMap(([section,values])=>Object.entries(values).filter(([key])=>!browserKeys.has(key)).map(([keys,action])=>({section,keys,action})));return [...result,...Object.entries({"ctrl-shift-p":"app.palette","ctrl-alt-t":"tab.new","ctrl-alt-n":"space.new","ctrl-alt-d":"pane.split:right","ctrl-alt-e":"pane.split:down"}).map(([keys,action])=>({section:"global",keys,action}))];}
@@ -138,7 +154,7 @@ export const placement=()=>({width:innerWidth,height:innerHeight,x:0,y:0});
 export function programFor(pane){const key=typeof pane.agent==="object"?pane.agent?.name:pane.agent;const source=key&&(model.programs.programs[key]||Object.values(model.programs.programs).find(value=>value.run?.[0]===key));return source?{...source,key,agent:true}:{...model.programs.programs.shell,key:"shell",name:"Terminal",shell:true,agent:false};}
 export const panes=()=>model.snapshot.panes.filter(pane=>model.snapshot.workspaces.find(space=>space.workspace_id===pane.workspace_id)?.label!=="__herdr_web_parked__").map(pane=>({pane:pane.pane_id,terminal:pane.terminal_id,tab:pane.tab_id,space:pane.workspace_id,title:pane.label||pane.title||pane.terminal_title||"",cwd:pane.foreground_cwd||pane.cwd,status:statusOf(pane.agent_status),program:programFor(pane),focused:pane.pane_id===model.selected.pane,zoomed:model.selected.zoom===pane.pane_id}));
 export const spaces=()=>model.snapshot.workspaces.filter(space=>space.label!=="__herdr_web_parked__").map(space=>({id:space.workspace_id,name:space.label,active:space.workspace_id===model.selected.space,machine:null,folder:model.snapshot.panes.find(pane=>pane.workspace_id===space.workspace_id)?.cwd,status:statusOf(space.agent_status),tabs:model.snapshot.tabs.filter(tab=>tab.workspace_id===space.workspace_id).map(tab=>({id:tab.tab_id,name:tab.label||"Terminal",active:tab.tab_id===model.selected.tab,status:statusOf(tab.agent_status),zoomed:!!model.selected.zoom,settled:!!shared(`tab.settled.${tab.tab_id}`)}))}));
-export function terminals(){const records=model.snapshot.panes.map(pane=>({address:pane.terminal_id,id:pane.terminal_id,pane:pane.pane_id,tab:pane.tab_id,space:pane.workspace_id,name:pane.tokens?.web_name?pane.tokens.web_name+(pane.tokens.web_name_tail||""):pane.label||pane.title||programFor(pane).name,cwd:pane.foreground_cwd||pane.cwd,parent:pane.tokens?.web_parent?pane.tokens.web_parent+(pane.tokens.web_parent_tail||""):null,labels:pane.tokens||{},status:statusOf(pane.agent_status),program:programFor(pane),alive:true,state:"live"}));const byId=new Map(records.map(value=>[value.address,value]));for(const record of records){const seen=new Set([record.address]);let ancestor=record.parent;for(let depth=0;ancestor;depth++){if(depth>=32||seen.has(ancestor)||!byId.has(ancestor)){record.parent=null;break;}seen.add(ancestor);ancestor=byId.get(ancestor).parent;}}return records;}
+export function terminals(){const records=model.snapshot.panes.map(pane=>({address:pane.terminal_id,id:pane.terminal_id,pane:pane.pane_id,tab:pane.tab_id,space:pane.workspace_id,name:pane.tokens?.web_name?pane.tokens.web_name+(pane.tokens.web_name_tail||""):pane.label||pane.title||programFor(pane).name,cwd:pane.foreground_cwd||pane.cwd,parent:pane.tokens?.web_parent?pane.tokens.web_parent+(pane.tokens.web_parent_tail||""):null,labels:{...pane.tokens,"herdr.right-click":shared(`right_click.${pane.terminal_id}`)||"menu"},status:statusOf(pane.agent_status),program:programFor(pane),alive:true,state:"live"}));const byId=new Map(records.map(value=>[value.address,value]));for(const record of records){const seen=new Set([record.address]);let ancestor=record.parent;for(let depth=0;ancestor;depth++){if(depth>=32||seen.has(ancestor)||!byId.has(ancestor)){record.parent=null;break;}seen.add(ancestor);ancestor=byId.get(ancestor).parent;}}return records;}
 export function agents(){const all=terminals(),parked=!!currentView()?.webProps?.parked;const parkedSpaces=new Set(model.snapshot.workspaces.filter(space=>space.label==="__herdr_web_parked__").map(space=>space.workspace_id));return all.filter(term=>parked?parkedSpaces.has(term.space)&&!all.some(parent=>parent.address===term.parent&&parkedSpaces.has(parent.space)):!term.parent&&(term.program.agent||all.some(child=>child.parent===term.address))).map((term,index)=>({...term,terminal:term.address,space_name:model.snapshot.workspaces.find(space=>space.workspace_id===term.space)?.label||"",seq:index,focused:term.pane===model.selected.pane}));}
 export const focused=()=>panes().find(pane=>pane.focused)||null;
 export const machines=()=>[{name:null,label:"Local server",layout:"ready",connected:true,local:true}];
@@ -176,22 +192,49 @@ export const feedbackAttachImages=disabledFeedback,feedbackClearImages=disabledF
 const paletteDefaults={graphite:[0x17191d,0xd2d4d9,0x394454,[0x45484f,0xdc8c95,0xa6bd91,0xd8be87,0x96b2d7,0xb5a2ce,0x8cbdc3,0xd2d4d9,0x818793,0xf0a5ad,0xbad5a2,0xead2a1,0xb0cbef,0xcbb7e6,0xa4d5db,0xf0f0f2]],ink:[0x111720,0xcdd6e4,0x344861,[0x414b5a,0xe58c9a,0x89c5aa,0xd9be82,0x91b6ee,0xb9a0e2,0x85c4d0,0xcdd6e4,0x7f91a7,0xf5a5b2,0xa5dec3,0xedd39c,0xaccbfa,0xd0b7f4,0xa0dce5,0xf0f5fc]],moss:[0x151c19,0xcdd7ce,0x354a40,[0x435248,0xdf978d,0xa0c4a2,0xd4bc8b,0x99b9cd,0xbba4c8,0x8bbdb5,0xcdd7ce,0x82968a,0xf1afa3,0xb8dab9,0xe9d2a5,0xb1d0e2,0xd1bddc,0xa4d6ca,0xeff5ee]]};
 const hex=value=>`#${Math.round(value).toString(16).padStart(6,"0")}`;
 const mix=(left,right,amount)=>hex([16,8,0].reduce((value,shift)=>value|(Math.round(((left>>shift)&255)*(1-amount)+((right>>shift)&255)*amount)<<shift),0));
-function colors(name){const palette=model.palette[name];const number=value=>parseInt(value.slice(1),16);const [background,foreground,selection,ansi]=palette?.ansi?[number(palette.background),number(palette.foreground),number(palette.selection),palette.ansi.map(number)]:paletteDefaults[name]||paletteDefaults.graphite;const result={background:hex(background),terminal_foreground:hex(foreground),foreground:"#eeeeef",surface:hex(background),canvas:mix(background,0,.16),chrome:mix(background,0,.32),popover:mix(background,0xffffff,.06),raised:mix(background,0xffffff,.09),hover:"#ffffff0e",selected:"#ffffff17",border:"#ffffff18",input:"#ffffff24",muted:mix(background,0xeeeeef,.6),dim:mix(background,0xeeeeef,.38),accent:hex(ansi[4]),accent_foreground:hex(background),solid:"#eeeeef",solid_foreground:mix(background,0,.28),ring:mix(background,0xeeeeef,.7),selection:hex(selection),cursor:hex(foreground),working:"#e5c07b",blocked:"#f0705f",done:"#76a8ff",idle:mix(background,0xeeeeef,.38),unknown:mix(background,0xeeeeef,.38)};ansi.forEach((value,index)=>result[`ansi${index}`]=hex(value));return {...result,...(palette?.ansi?{}:palette)};}
-export const theme=()=>({...colors(model.layout?.theme==="win98"?"win98":typeof settings().theme==="string"?settings().theme:model.layout?.theme||settings().theme_dark),...model.layout?.colors});
-export const themes=()=>["graphite","ink","moss","atom-one-dark"].map(name=>({name,light:false,colors:colors(name)}));
-const commandNames=["tab.new","tab.rename","tab.close","tab.next","tab.prev","pane.split","pane.close","pane.zoom","pane.go","pane.swap","space.new","space.rename","space.close","space.next","space.prev","layout.switch","layout.reset","layout.clone","layout.edit","terminal.open","terminal.copy","terminal.paste","agent.next","agent.prev","window.minimize","window.maximize","window.close","app.settings","app.help","app.reset","app.zoom_in","app.zoom_out","app.zoom_reset","app.theme"];
+function colors(name){
+  const palette=model.palette[name],light=name==="paper";
+  const number=value=>parseInt(value.slice(1),16);
+  const [background,foreground,selection,ansi]=palette?.ansi?[number(palette.background),number(palette.foreground),number(palette.selection),palette.ansi.map(number)]:paletteDefaults[name]||paletteDefaults.graphite;
+  const ui=light?0x1b1b1e:0xeeeeef;
+  const result={background:hex(background),terminal_foreground:hex(foreground),foreground:hex(ui),surface:hex(background),
+    canvas:mix(background,light?0xe8e8e2:0,light?.2:.16),chrome:mix(background,light?0xe8e8e2:0,light?.6:.32),
+    popover:light?hex(background):mix(background,0xffffff,.06),raised:mix(background,light?0:0xffffff,light?.035:.09),
+    hover:light?"#0000000c":"#ffffff0e",selected:light?"#00000012":"#ffffff17",border:light?"#00000017":"#ffffff18",input:light?"#00000026":"#ffffff24",
+    muted:mix(background,ui,light?.66:.6),dim:mix(background,ui,light?.46:.38),accent:hex(ansi[4]),accent_foreground:hex(background),
+    solid:hex(ui),solid_foreground:light?"#ffffff":mix(background,0,.28),ring:mix(background,ui,.7),selection:hex(selection),cursor:hex(foreground),
+    working:light?"#9a6700":"#e5c07b",blocked:light?"#c93c2c":"#f0705f",done:light?"#2f6fe4":"#76a8ff",idle:mix(background,ui,.38),unknown:mix(background,ui,.38)};
+  ansi.forEach((value,index)=>result[`ansi${index}`]=hex(value));return {...result,...(palette?.ansi?{}:palette)};
+}
+export function theme(){const name=settings().theme;return {...colors(name),...(!model.layout?.theme||model.layout.theme===name?model.layout?.colors:{})};}
+export const themes=()=>["graphite","ink","moss","paper","atom-one-dark","win98"].map(name=>({name,light:name==="paper",colors:colors(name)}));
+const commandNames=["tab.new","tab.rename","tab.close","tab.next","tab.prev","pane.split","pane.close","pane.zoom","pane.go","pane.swap","space.new","space.rename","space.close","space.next","space.prev","layout.switch","layout.reset","layout.clone","layout.edit","terminal.open","terminal.child","terminal.copy","terminal.paste","agent.next","agent.prev","window.minimize","window.maximize","window.close","app.settings","app.help","app.reset","app.zoom_in","app.zoom_out","app.zoom_reset","app.theme"];
 export const commands=()=>commandNames.map(name=>({name,args:[],about:name.replace(/[._]/g," ")}));
 export function run(name,args={}){return Promise.resolve().then(()=>execute(name,args)).catch(error=>model.hooks.notice(error.message));}
 async function execute(name,args){
   const selected=model.selected, targetTerminal=args.terminal||args.address, pane=args.pane||(targetTerminal?model.snapshot.panes.find(pane=>pane.terminal_id===targetTerminal)?.pane_id:selected.pane);
   const rpc=(method,params)=>request("/api/command",{method,params});
   const refresh=()=>model.hooks.refresh();
-  const select=async(space,tab,pane)=>{Object.assign(selected,{space,tab,pane,zoom:space===selected.space&&tab===selected.tab?selected.zoom:null});model.selectionRevision++;selection.save(selected);await refresh();model.hooks.focus?.(selected.pane);};
-  if(name==="space.select"){const space=spaces().find(space=>space.id===args.id);return select(space?.id,space?.tabs[0]?.id);}
+  const select=async(space,tab,pane)=>{Object.assign(selected,{space,tab,pane,zoom:space===selected.space&&tab===selected.tab?selected.zoom:null});if(space&&tab)selected.tabsBySpace={...selected.tabsBySpace,[space]:tab};model.selectionRevision++;selection.save(selected);await refresh();model.hooks.focus?.(selected.pane);};
+  if(name==="space.select"){const space=spaces().find(space=>space.id===args.id);return select(space?.id,space?.tabs.find(tab=>tab.id===selected.tabsBySpace?.[space.id])?.id||space?.tabs[0]?.id);}
   if(name==="tab.select"){const tab=model.snapshot.tabs.find(tab=>tab.tab_id===args.id);return select(tab?.workspace_id,tab?.tab_id);}
   if(name==="pane.focus"||name==="agent.focus"){const target=model.snapshot.panes.find(value=>value.pane_id===pane);if(target){if(model.snapshot.workspaces.find(space=>space.workspace_id===target.workspace_id)?.label==="__herdr_web_parked__")return model.hooks.preview(target.terminal_id);await select(target.workspace_id,target.tab_id,target.pane_id);model.hooks.focus(target.pane_id);}return;}
   if(name==="pane.zoom"){selected.zoom=selected.zoom===pane?null:pane;selection.save(selected);return model.hooks.render();}
   if(name.endsWith(".next")||name.endsWith(".prev")){const list=name.startsWith("space")?spaces():name.startsWith("agent")?agents():spaces().find(space=>space.active)?.tabs||[];if(!list.length)return;const index=list.findIndex(item=>item.active||item.focused), item=list[(index+(name.endsWith("next")?1:list.length-1))%list.length];return run(name.startsWith("space")?"space.select":name.startsWith("agent")?"agent.focus":"tab.select",{id:item.id,terminal:item.address});}
+  if(name==="terminal.child"){
+    const parent=args.parent||targetTerminal||focused()?.terminal;
+    if(!parent)throw new Error("Choose a parent terminal.");
+    if(args.argv===undefined)return openOverlay({mod:"new-menu",kind:"popup",width:270,props:{parent}});
+    const result=await request("/api/child-terminal",{parent,argv:args.argv,name:args.name||"Worker terminal"});
+    await refresh();model.hooks.notice(`Child terminal started: ${args.name||"Worker terminal"}`);
+    return model.hooks.preview(result.terminal);
+  }
+  if(name==="terminal.right_click"){
+    const terminal=targetTerminal||focused()?.terminal;
+    if(!terminal||!model.snapshot.panes.some(pane=>pane.terminal_id===terminal))throw new Error("Choose an existing terminal.");
+    if(!["menu","program"].includes(args.to))throw new Error("Choose menu or program right-click mode.");
+    return setShared(`right_click.${terminal}`,args.to);
+  }
   if(name==="space.new"||name==="tab.new"||name==="terminal.open"){
     const createSpace=name==="space.new"||!selected.space;
     const params={focus:false,cwd:args.cwd||args.folder||focused()?.cwd||model.home};if(args.name)params.label=args.name;if(!createSpace)params.workspace_id=args.space||selected.space;
@@ -215,11 +258,17 @@ async function execute(name,args){
   if(name==="app.settings")return openOverlay({mod:"frame/settings",kind:"dialog",width:820,height:640,props:args});
   if(name==="app.help")return openOverlay({mod:"help",kind:"dialog",width:650,height:520});
   if(name==="mod.open")return openOverlay({mod:args.name,kind:"dialog",width:600,height:500,props:args});
-  if(name==="app.theme"){preferences.save({...preferences.read(),theme:args.name,theme_dark:args.name});return model.hooks.render();}
+  if(name==="app.theme"){
+    const chosen=themes().find(theme=>theme.name===args.name);
+    if(!chosen)throw new Error("Unknown theme");
+    const current=settings(),appearance=chosen.light?"light":"dark";
+    preferences.save({...preferences.read(),appearance,theme:{dark:current.theme_dark,light:current.theme_light,[appearance]:args.name}});
+    return model.hooks.render();
+  }
   if(name.startsWith("app.zoom_")){preferences.save({...preferences.read(),zoom:name.endsWith("reset")?1:Math.min(2,Math.max(.65,settings().zoom+(name.endsWith("in")?.1:-.1)))});return model.hooks.render();}
   if(name==="layout.switch")return model.hooks.switchLayout(args.name||layouts()[(layouts().indexOf(shared("layout")||"main")+1)%layouts().length]);
   if(name==="layout.edit"||name==="layout.clone")return model.hooks.layoutEditor();
-  if(name==="layout.reset"||name==="app.reset")return model.hooks.switchLayout(shared("layout")||"main",true);
+  if(name==="layout.reset"||name==="app.reset")return model.hooks.switchLayout("main");
   if(name.startsWith("layout."))return model.hooks.layoutCommand(name,args);
   if(name==="window.maximize")return document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();
   if(name==="window.minimize"||name==="window.close"||name==="app.quit")return model.hooks.notice("Use your browser window controls. Closing this page preserves Herdr terminals.");

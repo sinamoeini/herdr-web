@@ -20,6 +20,35 @@ asset upgrade.
 
 ## Environment and evidence
 
+### Frontend regressions — November 2, 2026
+
+The nine behaviors in issue #8 pass local browser acceptance with original Herdr
+0.9.5 on Linux. Tests use Chromium 153.0.8010.12 and Firefox 157.0.
+The complete `ui.py`, `integration.py`, `view_edges.py`, and
+`graphics_browser.py` suites pass in both browsers.
+
+The added UI cases cover terminal shortcuts, child launch, right-click modes,
+remembered tabs, Light/Dark/System appearance, keyboard resizing, dialog focus,
+and default-screen reset. They exercise visible controls, real terminal output,
+backend state, saved ratios, reloads, and independent browser views.
+Terminal previews retain Tab input while rename dialogs contain keyboard focus.
+
+Child launch uses a harmless executable in a disposable fixture. The test
+temporarily selects a clean Bash startup for new children in that fixture.
+It tests the launch workflow, parent metadata, preview input, and continued
+process life. It does not test a third-party agent service.
+
+Mouse tests enable a terminal program's mouse protocol and inspect its input.
+Menu mode suppresses right-button reports. Program mode forwards them.
+Pane headers keep the app menu available in both modes. The tests use that
+header when they restore menu mode because Shift+right-click depends on the browser.
+
+The locked Rust suite passes all 37 tests. Python maintenance tests pass 15
+tests and skip 12 macOS-only tests on Linux. Asset provenance, repeatable imports,
+the plugin manifest, and the release build pass.
+The full 12-suite acceptance run is not repeated locally for this change.
+macOS, physical devices, and external-host SSH remain separate test scopes.
+
 GitHub CI is configured to run all 12 current native acceptance suites on every
 pull request and push to `main`, and before creating a draft release. Workflow
 artifacts include per-suite exit codes/logs, browser evidence, executable/backend

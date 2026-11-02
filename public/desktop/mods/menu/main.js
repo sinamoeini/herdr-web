@@ -37,6 +37,7 @@ function items(p, git) {
         ["Split down", "pane.split", { direction: "down", pane: tg.pane }],
         ["Zoom", "pane.zoom", { pane: tg.pane }],
         ["Rename", "pane.rename", { pane: tg.pane }],
+        ["New child agent…", "terminal.child", { parent: tg.terminal }],
         ["Park terminal", "terminal.park", { terminal: tg.terminal }],
         ...(term
           ? [

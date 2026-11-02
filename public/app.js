@@ -5,7 +5,7 @@ import { ImageScenes } from "./native-images.js";
 
 const { model,request,run,theme,settings }=desktop;
 const application=document.getElementById("app"), overlayRoot=document.getElementById("overlays"), notifications=document.getElementById("notifications");
-const blocks=new Map(), panels=new Map(), terminalViews=new Map(), overlays=new Map();
+const blocks=new Map(), panels=new Map(), terminalViews=new Map(), overlays=new Map(), dividers=new Map();
 let overlayNumber=0, popup=null, eventSocket=null, eventGeneration=0, paneSubscription="", currentLayout="", stopped=false;
 const terminalContent=document.createElement("div");terminalContent.className="terminal-content";
 const modules=new Map();
@@ -72,7 +72,16 @@ class PaneTerminal{
     this.error=document.createElement("div");this.error.className="terminal-status";this.error.hidden=true;
     this.canvas=document.createElement("canvas");this.canvas.className="web-image-canvas";
     this.element.append(this.header,this.viewport,this.error);this.element.addEventListener("pointerdown",()=>{if(!preview)run("pane.focus",{pane:pane.pane});});
-    this.element.addEventListener("contextmenu",event=>{if(event.shiftKey||!this.terminal?.modes.mouseTrackingMode||this.terminal.modes.mouseTrackingMode==="none"){event.preventDefault();openOverlay({mod:"menu",kind:"popup",width:220,props:{tab:"pane",target:{pane:pane.pane,terminal:pane.terminal}}},event);}});
+    this.element.addEventListener("mousedown",event=>{
+      if(event.button===2&&(event.shiftKey||desktop.shared(`right_click.${this.pane.terminal}`)!=="program")){
+        event.preventDefault();event.stopPropagation();
+      }
+    },true);
+    this.element.addEventListener("contextmenu",event=>{
+      event.preventDefault();
+      if(event.shiftKey||!this.viewport.contains(event.target)||desktop.shared(`right_click.${this.pane.terminal}`)!=="program")
+        openOverlay({mod:"menu",kind:"popup",width:220,props:{tab:"pane",target:{pane:this.pane.pane,terminal:this.pane.terminal}}},event);
+    });
     this.element.addEventListener("dragover",event=>{if(event.dataTransfer?.types.includes("Files"))event.preventDefault();});
     this.element.addEventListener("drop",event=>{const file=[...event.dataTransfer.files].find(file=>file.type.startsWith("image/"));if(file){event.preventDefault();void this.upload(file);}});
     this.viewport.addEventListener("paste",event=>{const image=[...event.clipboardData.items].find(item=>item.type.startsWith("image/"));if(image){event.preventDefault();event.stopPropagation();void this.upload(image.getAsFile());}},true);
@@ -106,28 +115,73 @@ class PaneTerminal{
 }
 function terminalTheme(){const colors=theme();const value={background:colors.background,foreground:colors.terminal_foreground,cursor:colors.cursor,selectionBackground:colors.selection};["black","red","green","yellow","blue","magenta","cyan","white","brightBlack","brightRed","brightGreen","brightYellow","brightBlue","brightMagenta","brightCyan","brightWhite"].forEach((key,index)=>value[key]=colors[`ansi${index}`]);return value;}
 function renderTerminals(){
+  const usedDividers=new Set();
+  const clearDividers=()=>{for(const [key,divider] of dividers)if(!usedDividers.has(key)){divider.remove();dividers.delete(key);}};
   const shown=desktop.panes().filter(pane=>pane.tab===model.selected.tab&&(!model.selected.zoom||pane.pane===model.selected.zoom));const ids=new Set(shown.map(pane=>pane.pane));
   for(const [id,view] of terminalViews)if(!ids.has(id)){view.dispose();terminalViews.delete(id);}
   for(const pane of shown){let view=terminalViews.get(pane.pane);if(!view){view=new PaneTerminal(pane);terminalViews.set(pane.pane,view);terminalContent.append(view.element);}view.pane=pane;view.element.classList.toggle("focused",pane.focused);view.element.style.borderRadius=`${model.paneAppearance.radius??10}px`;view.viewport.style.background=tint(model.paneAppearance.background||theme().background);view.header.style.height=`${model.paneAppearance.header?.height||30}px`;void panel(`pane-${pane.pane}-false`,model.paneAppearance.header?.content?.mod||"pane",view.header,{...model.paneAppearance.header?.content?.props,pane:pane.pane,terminal:pane.terminal});view.appearance(pane);}
-  terminalContent.querySelectorAll(".split-divider,.empty-session").forEach(node=>node.remove());
-  if(!shown.length){const empty=document.createElement("div");empty.className="empty-session";empty.textContent="No terminals yet. ";const create=document.createElement("button");create.textContent="Create space";create.onclick=()=>run("space.new");empty.append(create);terminalContent.append(empty);return;}
+  terminalContent.querySelectorAll(".empty-session").forEach(node=>node.remove());
+  if(!shown.length){clearDividers();const empty=document.createElement("div");empty.className="empty-session";empty.textContent="No terminals yet. ";const create=document.createElement("button");create.textContent="Create space";create.onclick=()=>run("space.new");empty.append(create);terminalContent.append(empty);return;}
   const place=(node,rect,path=[])=>{
     if(node.type==="pane"){const view=terminalViews.get(node.pane_id);if(view){const gap=(model.paneAppearance.gap||8)/2;Object.assign(view.element.style,{left:`calc(${rect.x*100}% + ${gap}px)`,top:`calc(${rect.y*100}% + ${gap}px)`,width:`calc(${rect.width*100}% - ${gap*2}px)`,height:`calc(${rect.height*100}% - ${gap*2}px)`});}return;}
     const horizontal=node.direction==="right";const ratio=node.ratio||.5;
     place(node.first,{...rect,[horizontal?"width":"height"]:(horizontal?rect.width:rect.height)*ratio},[...path,false]);
     place(node.second,{...rect,[horizontal?"x":"y"]:(horizontal?rect.x:rect.y)+(horizontal?rect.width:rect.height)*ratio,[horizontal?"width":"height"]:(horizontal?rect.width:rect.height)*(1-ratio)},[...path,true]);
-    const divider=document.createElement("div");divider.className=`split-divider ${horizontal?"vertical":"horizontal"}`;
+    const key=JSON.stringify([model.selected.tab,path]);usedDividers.add(key);
+    let divider=dividers.get(key);
+    if(!divider){
+      divider=document.createElement("div");divider.tabIndex=0;
+      divider.setAttribute("role","separator");divider.setAttribute("aria-label","Resize panes");
+      divider.setAttribute("aria-valuemin","10");divider.setAttribute("aria-valuemax","90");
+      dividers.set(key,divider);terminalContent.append(divider);
+      const save=async(split,value)=>{
+        split.node.ratio=Math.max(.1,Math.min(.9,value));
+        divider.setAttribute("aria-valuenow",String(Math.round(split.node.ratio*100)));
+        try{await request("/api/command",{method:"layout.set_split_ratio",params:{tab_id:split.tab,path:split.path,ratio:split.node.ratio}});await refresh.request();}
+        catch(error){notice(error.message);}
+      };
+      divider.onkeydown=event=>{
+        const split=divider.split,keys=split.horizontal?["ArrowLeft","ArrowRight"]:["ArrowUp","ArrowDown"];
+        if(!keys.includes(event.key)&&!["Home","End"].includes(event.key))return;
+        event.preventDefault();event.stopPropagation();
+        const ratio=event.key==="Home"?.1:event.key==="End"?.9:split.node.ratio+(event.key===keys[1]?.05:-.05);
+        void save(split,ratio);
+      };
+      divider.onpointerdown=event=>{
+        if(event.button!==0)return;
+        event.preventDefault();divider.focus();divider.setPointerCapture(event.pointerId);
+        const split=divider.split,bounds=terminalContent.getBoundingClientRect();
+        let ratio=split.node.ratio;
+        const move=event=>{
+          const value=split.horizontal?((event.clientX-bounds.left)/bounds.width-split.rect.x)/split.rect.width:((event.clientY-bounds.top)/bounds.height-split.rect.y)/split.rect.height;
+          ratio=Math.max(.1,Math.min(.9,value));divider.setAttribute("aria-valuenow",String(Math.round(ratio*100)));
+        };
+        const stop=()=>{divider.onpointermove=null;divider.onpointerup=null;divider.onpointercancel=null;if(divider.hasPointerCapture(event.pointerId))divider.releasePointerCapture(event.pointerId);};
+        divider.onpointermove=move;
+        divider.onpointerup=event=>{move(event);stop();void save(split,ratio);};
+        divider.onpointercancel=()=>{stop();divider.setAttribute("aria-valuenow",String(Math.round(divider.split.node.ratio*100)));};
+      };
+    }
+    divider.split={node,path,tab:model.selected.tab,horizontal,rect};
+    divider.className=`split-divider ${horizontal?"vertical":"horizontal"}`;
+    divider.setAttribute("aria-orientation",horizontal?"vertical":"horizontal");
+    divider.setAttribute("aria-valuenow",String(Math.round(ratio*100)));
     Object.assign(divider.style,{left:`${(rect.x+(horizontal?rect.width*ratio:0))*100}%`,top:`${(rect.y+(horizontal?0:rect.height*ratio))*100}%`,width:horizontal?"8px":`${rect.width*100}%`,height:horizontal?`${rect.height*100}%`:"8px"});
-    divider.onpointerdown=event=>{event.preventDefault();const bounds=terminalContent.getBoundingClientRect();divider.setPointerCapture(event.pointerId);const move=event=>{const value=horizontal?((event.clientX-bounds.left)/bounds.width-rect.x)/rect.width:((event.clientY-bounds.top)/bounds.height-rect.y)/rect.height;node.ratio=Math.max(.1,Math.min(.9,value));};divider.onpointermove=move;divider.onpointerup=async()=>{divider.onpointermove=null;try{await request("/api/command",{method:"layout.set_split_ratio",params:{tab_id:model.selected.tab,path,ratio:node.ratio}});await refresh.request();}catch(error){notice(error.message);}};};terminalContent.append(divider);
   };
   if(model.selected.zoom)place({type:"pane",pane_id:model.selected.zoom},{x:0,y:0,width:1,height:1});
   else if(model.backendLayout?.tab_id===model.selected.tab)place(model.backendLayout.root,{x:0,y:0,width:1,height:1});
+  clearDividers();
 }
-function render(){if(!model.layout)return;const colors=theme();for(const [key,value] of Object.entries(colors))document.documentElement.style.setProperty(`--${key.replaceAll("_","-")}`,value);document.body.style.fontFamily=`"${settings().ui_font||"Geist"}",sans-serif`;application.style.zoom=settings().zoom;renderLayout();renderTerminals();for(const [key,record] of panels)if(key.startsWith("overlay-"))record.view?.notify();}
+function render(){if(!model.layout)return;const colors=theme();for(const [key,value] of Object.entries(colors))document.documentElement.style.setProperty(`--${key.replaceAll("_","-")}`,value);document.documentElement.style.colorScheme=settings().appearance;document.body.style.fontFamily=`"${settings().ui_font||"Geist"}",sans-serif`;application.style.zoom=settings().zoom;renderLayout();renderTerminals();for(const [key,record] of panels)if(key.startsWith("overlay-"))record.view?.notify();}
+function focusable(container){return [...container.querySelectorAll('input,button,select,textarea,a[href],[tabindex],[contenteditable="true"]')].filter(node=>(node.tabIndex>=0||node.isContentEditable)&&!node.matches(":disabled")&&!node.closest("[inert]")&&node.getClientRects().length&&getComputedStyle(node).visibility!=="hidden");}
+function topDialog(){return [...overlays.values()].reverse().find(overlay=>overlay.kind==="dialog");}
+function focusDialog(overlay){(focusable(overlay.container)[0]||overlay.container).focus();}
 function openOverlay(options,event){
   if(options.kind==="popup"){const parents=new Set(options.props?.parents||[]);for(const [id,overlay] of [...overlays])if(overlay.kind==="popup"&&!parents.has(id))closeOverlay(id);}
   else for(const [id,overlay] of [...overlays])if(overlay.kind==="popup")closeOverlay(id);
   const id=`overlay-${++overlayNumber}`;const container=document.createElement("div");container.className=options.kind==="popup"?"web-popup":"web-dialog";container.dataset.overlay=id;container.setAttribute("role",options.kind==="popup"?"menu":"dialog");container.style.width=`${Math.min(innerWidth-24,options.width||480)}px`;if(options.height)container.style.height=`${Math.min(innerHeight-24,options.height)}px`;
+  container.tabIndex=-1;container.setAttribute("aria-label",options.props?.title||options.mod);
+  if(options.kind==="dialog")container.setAttribute("aria-modal","true");
   if(options.kind==="window")container.classList.add("web-window");if(options.frame==="none")container.classList.add("web-frameless");
   container.dataset.overlayParents=(options.props?.parents||[]).join(" ");
   if(options.kind==="window"&&!options.width)container.style.width="max-content";
@@ -138,11 +192,29 @@ function openOverlay(options,event){
   if(options.kind==="window"&&!options.height)host.style.flex="0 0 auto";
   const overlay={container,host,kind:options.kind,previous:document.activeElement,cleanups:new Set()};overlays.set(id,overlay);overlayRoot.append(container);
   if(options.kind==="window")container.addEventListener("pointerdown",event=>{const bounds=container.getBoundingClientRect();if(event.button!==0||event.clientY-bounds.top>30)return;const start={x:event.clientX,y:event.clientY};const move=event=>{if(Math.abs(event.clientX-start.x)+Math.abs(event.clientY-start.y)<4)return;container.style.transform="none";container.style.left=`${Math.max(0,Math.min(innerWidth-60,bounds.left+event.clientX-start.x))}px`;container.style.top=`${Math.max(0,Math.min(innerHeight-40,bounds.top+event.clientY-start.y))}px`;};const stop=()=>{globalThis.removeEventListener("pointermove",move);globalThis.removeEventListener("pointerup",stop);globalThis.removeEventListener("pointercancel",stop);overlay.cleanups.delete(stop);};overlay.cleanups.add(stop);globalThis.addEventListener("pointermove",move);globalThis.addEventListener("pointerup",stop,{once:true});globalThis.addEventListener("pointercancel",stop,{once:true});});
-  void panel(id,options.mod,host,{...options.props,overlay:id});return id;
+  void panel(id,options.mod,host,{...options.props,overlay:id}).then(()=>{if(topDialog()===overlay&&!container.contains(document.activeElement))focusDialog(overlay);});return id;
 }
-function closeOverlay(id){if(!id)id=[...overlays.keys()].at(-1);const overlay=overlays.get(id);if(!overlay)return;for(const cleanup of overlay.cleanups)cleanup();discardPanel(id);overlay.terminal?.dispose();overlay.container.remove();overlays.delete(id);if(popup===id)popup=[...overlays].filter(([,value])=>value.kind==="popup").at(-1)?.[0]||null;overlay.previous?.focus?.();}
+function closeOverlay(id){
+  if(!id)id=[...overlays.keys()].at(-1);const overlay=overlays.get(id);if(!overlay)return;
+  const wasTop=id===[...overlays.keys()].at(-1);
+  for(const cleanup of overlay.cleanups)cleanup();discardPanel(id);overlay.terminal?.dispose();overlay.container.remove();overlays.delete(id);
+  if(popup===id)popup=[...overlays].filter(([,value])=>value.kind==="popup").at(-1)?.[0]||null;
+  if(!wasTop)return;
+  const dialog=topDialog();
+  if(dialog&&!dialog.container.contains(overlay.previous)){focusDialog(dialog);return;}
+  if(overlay.previous?.isConnected)overlay.previous.focus?.();
+  if(document.activeElement===document.body)terminalViews.get(model.selected.pane)?.focus();
+}
 document.addEventListener("pointerdown",event=>{if(event.button!==0||!popup||overlays.get(popup)?.container.contains(event.target))return;const menus=[...overlays].filter(([,value])=>value.kind==="popup");if(menus.some(([,value])=>value.container.contains(event.target)))closeOverlay(popup);else for(const [id] of menus)closeOverlay(id);});
 document.addEventListener("contextmenu",event=>{const target=[...overlays.values()].find(value=>value.kind==="popup"&&value.container.contains(event.target));forwardPopupContext(event,target?.container);},true);
+document.addEventListener("keydown",event=>{
+  const dialog=topDialog();
+  if(event.key!=="Tab"||!dialog||document.querySelector("dialog[open]"))return;
+  if(dialog.container.contains(event.target)&&event.target.closest?.(".terminal-pane"))return;
+  const nodes=focusable(dialog.container),index=nodes.indexOf(document.activeElement);
+  const next=index<0?(event.shiftKey?nodes.at(-1):nodes[0]):nodes[(index+(event.shiftKey?nodes.length-1:1))%nodes.length];
+  event.preventDefault();event.stopImmediatePropagation();(next||dialog.container).focus();
+},true);
 document.addEventListener("keydown",event=>{const terminal=!!event.target.closest?.(".terminal-pane");const action=desktop.keyCommand(event,terminal);if(!action||action==="terminal.paste_image")return;if(action!=="app.palette"&&(event.target.closest?.('dialog,input,textarea,[contenteditable="true"]')&&!terminal||overlays.size&&(!terminal||!action.startsWith("terminal.")&&!action.startsWith("send:"))))return;event.preventDefault();event.stopPropagation();desktop.dispatchKey(action);},true);
 document.addEventListener("keydown",event=>{if(event.key==="Escape"&&!event.defaultPrevented&&overlays.size){closeOverlay();event.preventDefault();}});
 function activeTerminal(){return [...overlays.values()].map(overlay=>overlay.terminal).find(view=>view?.element.contains(document.activeElement))||terminalViews.get(model.selected.pane);}
@@ -151,7 +223,7 @@ async function paste(){try{activeTerminal()?.terminal?.paste(await navigator.cli
 async function preview(terminal){const pane=await desktop.resolveTerminalPane(terminal);const id=openOverlay({mod:"peek",kind:"dialog",width:850,height:500,props:{terminal}});const overlay=overlays.get(id);if(!overlay)return;overlay.host.style.flex="0 0 36px";const viewport=document.createElement("div");viewport.style.cssText="position:relative;flex:1;min-height:0";overlay.container.append(viewport);const view=new PaneTerminal({pane:pane.pane_id,terminal:pane.terminal_id},true);view.header.hidden=true;view.element.style.cssText="inset:0;width:100%;height:100%";viewport.append(view.element);overlay.terminal=view;}
 function find(node,id){if(node.id===id)return node;for(const child of node.children||[]){const value=find(child,id);if(value)return value;}return null;}
 function layoutCommand(name,args){if(name==="layout.set"&&args.layout){model.layout=validateLayout(args.layout);scheduleRender();return;}const node=find(model.layout,args.id||args.stack);if(!node)throw new Error("Layout target not found");if(name==="layout.show")node.hidden=false;else if(name==="layout.hide")node.hidden=true;else if(name==="layout.select")node.active=args.child;else if(name==="layout.resize")node.size={px:args.px||args.size||268};else if(name==="layout.set")Object.assign(node,args.props||args.value||{});else throw new Error(`Unsupported layout action ${name}`);scheduleRender();}
-async function switchLayout(name,reset=false){if(!model.builtins[name]&&!model.personal[name])throw new Error("Unknown layout");model.layout=validateLayout(model.personal[name]||model.builtins[name]);currentLayout=name;model.shared.layout=name;localStorage.setItem("herdr-web.shared.v1",JSON.stringify(model.shared));for(const id of [...overlays.keys()])closeOverlay(id);render();}
+async function switchLayout(name){if(!model.builtins[name]&&!model.personal[name])throw new Error("Unknown layout");model.layout=validateLayout(model.personal[name]||model.builtins[name]);currentLayout=name;model.shared.layout=name;localStorage.setItem("herdr-web.shared.v1",JSON.stringify(model.shared));for(const id of [...overlays.keys()])closeOverlay(id);render();}
 function saveLayout(name,value){if(!/^[A-Za-z0-9_-]{1,64}$/.test(name)||Object.hasOwn(model.builtins,name))throw new Error("Choose a personal layout name (1–64 letters, digits, _ or -); built-ins are immutable");const valid=validateLayout(value);Object.defineProperty(model.personal,name,{value:valid,writable:true,enumerable:true,configurable:true});localStorage.setItem("herdr-web.personal.v1",JSON.stringify(model.personal));return switchLayout(name);}
 function layoutEditor(){const box=document.createElement("dialog");box.className="layout-editor";const title=document.createElement("h2");title.textContent="Personal layout editor";const name=document.createElement("input");name.value=model.builtins[currentLayout]?`${currentLayout}-personal`:currentLayout;const text=document.createElement("textarea");text.value=JSON.stringify(model.layout,null,2);const error=document.createElement("p");box.append(title,name,text,error);for(const [label,action] of [["Save copy / switch",()=>saveLayout(name.value,JSON.parse(text.value))],["Download",()=>{const link=document.createElement("a");const url=URL.createObjectURL(new Blob([text.value],{type:"application/json"}));link.href=url;link.download=`${name.value}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}],["Delete personal layout",()=>{if(model.builtins[name.value])throw new Error("Built-ins are immutable");delete model.personal[name.value];localStorage.setItem("herdr-web.personal.v1",JSON.stringify(model.personal));switchLayout("main");}],["Cancel",()=>box.close()]]){const button=document.createElement("button");button.textContent=label;button.onclick=()=>{try{action();if(!label.startsWith("Download"))box.close();}catch(failure){error.textContent=failure.message;}};box.append(button);}box.onclose=()=>box.remove();document.body.append(box);box.showModal();}
 const refresh=desktop.coalescedRefresh(async signal=>{
@@ -168,6 +240,7 @@ document.getElementById("layout-editor-button").onclick=layoutEditor;
 document.getElementById("new-space-button").onclick=()=>run("space.new");
 document.getElementById("parked-button").onclick=()=>openOverlay({mod:"agents",kind:"dialog",width:450,height:520,props:{parked:true}});
 globalThis.addEventListener("beforeunload",()=>{stopped=true;refresh.dispose();eventSocket?.close();for(const view of terminalViews.values())view.dispose();for(const record of panels.values())record.view?.dispose();});
+globalThis.matchMedia?.("(prefers-color-scheme: light)").addEventListener("change",scheduleRender);
 try{
   await Promise.all([document.fonts.load('14px "JetBrains Mono"'),document.fonts.load('13px "Geist"')]);await document.fonts.ready;
   if(!localStorage.getItem("herdr-web.preferences.v1"))desktop.preferences.save({sounds:{enabled:false}});
