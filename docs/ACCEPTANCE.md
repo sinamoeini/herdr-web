@@ -20,6 +20,23 @@ asset upgrade.
 
 ## Environment and evidence
 
+### Git commit identity, November 2, 2026
+
+The integration test for issue #4 runs through `services.py` against the real `/api/git` route.
+It uses disposable repositories and isolated Git configuration.
+The global-only case fails against the prior executable and passes with the identity fix.
+
+The cases cover global identity, repository overrides, conditional includes, linked worktrees, and distinct author and committer values.
+They also cover HOME/XDG discovery, missing or empty identity, malformed configuration, and inherited environment injection.
+Rejected commits preserve HEAD and the staged tree.
+Harmless marker programs prove that hooks, signing, pagers, file monitors, filters, and external diffs stay disabled.
+
+The locked Rust suite passes all 38 tests.
+The complete service suite passes locally.
+Git process tests cover output limits, timeouts, cancellation, shared job capacity, and shutdown for identity queries and commits.
+The query and commit share one 15-second deadline.
+These tests cover the service contract. They do not automate the Commit button in a browser.
+
 ### Terminal sizing, November 2, 2026
 
 The integration test for issue #10 runs through `ui.py` in Chromium and Firefox.

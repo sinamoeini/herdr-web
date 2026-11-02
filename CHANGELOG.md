@@ -17,6 +17,7 @@ Ctrl+L now reaches the focused terminal, so the shell can clear the screen.
 - Keep Tab navigation inside dialogs and restore focus when they close. Terminal previews retain Tab input.
 - Return to the main layout when the user resets the default screen.
 - Keep the final terminal row fully visible by excluding pane padding from the terminal size.
+- Preserve configured Git author and committer identity in browser commits. Reject missing identity before committing.
 
 ### Changed
 
