@@ -7,6 +7,7 @@ import time
 from harness import BINARY, Fixture, wait_for, wait_for_browser
 from frontend_regressions import run_frontend_regressions
 from terminal_geometry import run_terminal_geometry
+from browser_evidence import BrowserEvidence
 from playwright.sync_api import expect, sync_playwright
 
 
@@ -52,23 +53,12 @@ def main():
                 page=context.new_page()
                 errors=[]
                 commands=[]
-                http_failures=[]
+                evidence=BrowserEvidence(fixture.url)
+                evidence.attach(page)
                 selected_before_split=None
                 selected_pane=None
-                def record_response(response):
-                    if response.status<400:return
-                    failure={'status':response.status,'url':response.url,'method':response.request.method}
-                    try:
-                        if 'application/json' in response.request.headers.get('content-type',''):
-                            failure['request']=response.request.post_data_json
-                        failure['response']=response.json()
-                    except Exception as capture:failure['capture_error']=str(capture)
-                    http_failures.append(failure)
-                    del http_failures[:-100]
                 page.on('request',lambda request:commands.append(request.post_data_json) if request.url.endswith('/api/command') and request.method=='POST' else None)
-                page.on('response',record_response)
                 page.on('pageerror',lambda error:errors.append(str(error)))
-                page.on('console',lambda message:print(name,message.type,message.text,flush=True) if message.type=='error' else None)
                 page.add_init_script('globalThis.webPanelErrors=[];globalThis.addEventListener("herdr-error",event=>{const error=event.detail?.stack||String(event.detail);webPanelErrors.push(error);console.error(error);})')
                 try:
                     page.goto(fixture.url)
@@ -223,12 +213,14 @@ def main():
                     assert all(command['params'].get('focus') is False for command in commands if command['method'] in {'workspace.create','tab.create','pane.split'}),commands
                     current_panes={item['pane_id'] for item in fixture.rpc('session.snapshot')['snapshot']['panes']}
                     assert previous_panes < current_panes and len(current_panes)==len(previous_panes)+1
-                    regressions=run_frontend_regressions(page,fixture)
+                    regressions=run_frontend_regressions(page,fixture,evidence)
                     regressions['terminal_geometry']=run_terminal_geometry(page,fixture)
                     assert not any(command['method'] in {'workspace.focus','tab.focus','pane.focus','pane.focus_direction'} for command in commands),commands
                     page.screenshot(path=str(fixture.logs/f'{name}-desktop.png'))
                     errors.extend(page.evaluate('webPanelErrors'))
                     assert not errors,errors
+                    evidence.assert_clean()
+                    print(f'{name}: browser-error gate passed; expected non-repository probes={len(evidence.http_failures)}, expected console diagnostics={len(evidence.console_errors)}',flush=True)
                     results[name]={'version':browser.version,'empty_create':True,'context_target_and_coordinates':True,'rename_cancel':True,'palette_theme':True,'privacy':True,'file_highlight':True,'personal_layout_and_trusted_panel_reload':True,'layout_download_and_delete':True,'herdr98_games_drag_and_clippy':True,'herdr98_run_real_terminal':True,'split_selects_and_focuses_locally':True,'no_public_focus_mutations':True,'native_default_focus_observed':[backend_focus,backend_focus_after],'frontend_regressions':regressions,'errors':errors}
                 except Exception:
                     try:
@@ -242,7 +234,9 @@ def main():
                     except Exception:pass
                     raise
                 finally:
-                    (fixture.logs/f'{name}-http-failures.json').write_text(json.dumps(http_failures,indent=2))
+                    report=evidence.report()
+                    (fixture.logs/f'{name}-http-failures.json').write_text(json.dumps(evidence.http_failures,indent=2))
+                    (fixture.logs/f'{name}-browser-evidence.json').write_text(json.dumps(report,indent=2))
                     context.close();browser.close()
                     for space in fixture.rpc('session.snapshot')['snapshot']['workspaces']:
                         fixture.rpc('workspace.close',{'workspace_id':space['workspace_id']})

@@ -42,7 +42,12 @@ jobs:
           echo "$RUNNER_TEMP/herdr-bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/herdr-bin/herdr" --version
       - name: Install pinned Rust toolchain
-        run: rustup show active-toolchain
+        run: |
+          toolchain=$(python3 -c 'import tomllib; print(tomllib.load(open("rust-toolchain.toml", "rb"))["toolchain"]["channel"])')
+          rustup toolchain install "$toolchain" --profile minimal --no-self-update
+          rustup show active-toolchain
+      - name: Verify browser-error gate with real HTTP and WebSockets
+        run: python3 test/browser_evidence_native.py
       - name: Build manifest executable
         run: ./build.sh
       - name: Run all 12 native acceptance suites

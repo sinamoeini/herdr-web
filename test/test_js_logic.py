@@ -65,7 +65,7 @@ class LogicTests(unittest.TestCase):
         self.javascript.close()
 
     def test_all_authored_modules_parse(self):
-        for relative in ["public/desktop/runtime/gpui.js", "public/desktop/runtime/base.js", "public/desktop/runtime/herdr.js", "public/desktop/runtime/layouts.js", "public/native-images.js"]:
+        for relative in ["public/desktop/runtime/gpui.js", "public/desktop/runtime/base.js", "public/desktop/runtime/herdr.js", "public/desktop/runtime/layouts.js", "public/native-images.js", "public/split-ratio.js"]:
             with self.subTest(module=relative):
                 source = (ROOT / relative).read_text()
                 source = re.sub(r"^import .*?;\s*$", "", source, flags=re.MULTILINE)
@@ -109,6 +109,59 @@ class LogicTests(unittest.TestCase):
             "stalePending": False, "originalReady": True,
             "originalInputEnabled": True, "previewFocus": "preview",
         })
+
+    def test_split_ratio_writes_and_refreshes_are_serialized(self):
+        self.javascript.module("public/split-ratio.js")
+        self.javascript.evaluate("""
+            const writes = [], changes = [], failures = [];
+            let finishWrite, finishRefresh;
+            const writer = new SplitRatioWriter(
+                params => { writes.push(params); return new Promise(resolve => { finishWrite = resolve; }); },
+                () => new Promise(resolve => { finishRefresh = resolve; }),
+                () => changes.push(writer.pending),
+                error => failures.push(error.message),
+            );
+            const split = {tab: 'tab-one', path: [false]};
+            writer.save(split, .55);
+            writer.save(split, .1);
+            writer.save(split, .9);
+            split.tab = 'different-tab';
+            split.path.push(true);
+        """)
+        self.assertEqual(json.loads(self.javascript.evaluate('JSON.stringify({writes, pending: writer.pending})')),
+                         {"writes": [{"tab_id": "tab-one", "path": [False], "ratio": .55}], "pending": .9})
+        for count in (1, 2, 3):
+            self.javascript.evaluate('finishWrite();')
+            self.assertEqual(int(self.javascript.evaluate('writes.length')), count)
+            self.assertEqual(self.javascript.evaluate('String(writer.pending)'), '0.9')
+            self.javascript.evaluate('finishRefresh();')
+        result = json.loads(self.javascript.evaluate('JSON.stringify({writes, changes, failures, pending: writer.pending})'))
+        self.assertEqual([write['ratio'] for write in result['writes']], [.55, .1, .9])
+        self.assertTrue(all(write['tab_id'] == 'tab-one' and write['path'] == [False] for write in result['writes']))
+        self.assertEqual(result['changes'], [.55, .1, .9, None])
+        self.assertEqual(result['failures'], [])
+        self.assertIsNone(result['pending'])
+
+    def test_failed_split_ratio_write_does_not_block_the_latest_value(self):
+        self.javascript.module("public/split-ratio.js")
+        self.javascript.evaluate("""
+            const writes = [], failures = [], changes = [];
+            let rejectWrite;
+            const writer = new SplitRatioWriter(
+                params => {
+                    writes.push(params.ratio);
+                    return writes.length === 1 ? new Promise((resolve, reject) => { rejectWrite = reject; }) : Promise.resolve();
+                },
+                async () => {},
+                () => changes.push(writer.pending),
+                error => failures.push(error.message),
+            );
+            writer.save({tab: 'tab-one', path: []}, 0);
+            writer.save({tab: 'tab-one', path: []}, 1);
+        """)
+        self.javascript.evaluate('rejectWrite(new Error("save failed"));')
+        result = json.loads(self.javascript.evaluate('JSON.stringify({writes, failures, changes, pending: writer.pending})'))
+        self.assertEqual(result, {'writes': [.1, .9], 'failures': ['save failed'], 'changes': [.1, .9, None], 'pending': None})
 
     def test_all_adapted_official_panels_and_application_parse(self):
         sources=list((ROOT/'public/desktop').rglob('*.js'))+[ROOT/'public/app.js']

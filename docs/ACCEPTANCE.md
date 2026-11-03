@@ -20,6 +20,81 @@ asset upgrade.
 
 ## Environment and evidence
 
+### Empty-session click stability
+
+Run 41583119870 passed permissions and Chromium UI acceptance but Firefox issued
+no workspace-create command after clicking the initial Create space button.
+The empty-session renderer replaced that button on every refresh, including
+between pointer down and up. It now retains the empty-state DOM until panes
+exist. A real-browser regression drives pointer down, runs the production
+renderer again, then releases the pointer; it fails before the fix and requires
+the same button plus exactly one `space.new` action afterward in both engines.
+This is DOM/control evidence; full backend startup still requires CI acceptance.
+
+### Divider persistence race
+
+PR #15 run 41579543272 passed 11/12 application suites but reloaded the UI while
+split-ratio saves were still pending: the optimistic value was 90%, while the
+reloaded backend value was 55%. Divider writes and their refreshes are now
+serialized, the latest pending ratio survives intermediate refreshes, and
+`aria-busy` remains set until the final save/refresh completes. The real UI test
+requires the final save response, an idle divider, and a backend `layout.export`
+ratio of 0.9 before reloading; it still requires 90% after reload.
+Deterministic JavaScriptCore tests cover queued writes, delayed refreshes,
+captured tab/path ownership, clamping, and recovery after a failed write.
+Full Linux/application acceptance must verify this change in CI.
+
+### Browser-error evidence gate
+
+`ui.py` now rejects unexpected HTTP responses, console errors, page exceptions,
+and WebSocket errors/unclean closes while a connection is still active, including
+secondary pages in the test's browser context. The only
+HTTP exception is the exact exit-128 non-repository response to three known
+read-only Git discovery/status probes. Chromium's corresponding 422 console
+diagnostic requires a matching expected response. Known Firefox socket messages
+require recent, same-URL evidence of an explicit client close or document unload;
+an active socket failure still fails even if another connection is closing.
+An explicit tab-removal fixture may also admit socket failures for only the exact
+pane IDs the backend confirms are gone, from the removal action through two
+seconds after confirmation. Only the known 400 handshake diagnostic is allowed;
+other origins, panes, times, and HTTP codes still fail. The independent-view test
+detaches its secondary view before deleting the primary view's selected tab,
+and closes it through native `beforeunload` to avoid unnecessary attachment
+contention. Observer document IDs also work in insecure `about:blank` documents.
+Secondary views start with an independent saved selection, so their initial
+load does not attach to the primary view's backend-default pane. Firefox native
+messages correlate with their nearest same-URL socket-error event, not unrelated
+events from other documents; independently unexpected active-socket events
+still fail the gate.
+All captured errors and socket lifecycle events are retained in per-browser
+`*-browser-evidence.json` artifacts, without truncating earlier failures.
+HTTP responses are recorded immediately and their bodies captured when requests
+finish. Test-only fetch instrumentation adds a same-origin request-ID header and
+clones error responses before the application receives them. If navigation evicts
+Playwright's copy, only the matching request-ID/URL/method/status/body evidence
+can recover it; the original capture error is retained. Browser-side failures
+are independently checked, not blanket-exempted. The native gate fixture also
+tests immediate probe-then-reload cycles in both browsers.
+
+The gate's standalone HTTP/WebSocket fixture passes locally in Chromium
+156.0.8078.4 and Firefox 157.0, including intentional handshake cancellation,
+reload, expected Git probing, unexpected console errors, and a real established
+connection drop. This verifies the gate, not a new full Linux/application run.
+CI runs that fixture before the existing 12 native application suites.
+Acceptance-runner unit tests capture and assert their intentional failure output;
+they no longer print misleading `Failed suites` summaries into successful CI.
+All Rust workflows install the toolchain from `rust-toolchain.toml` explicitly,
+rather than relying on deprecated `rustup show` auto-installation.
+
+The pre-gesture audio fixture now waits passively for the page's console probe
+before calling renderer evaluation, selector polling, or foreground activation.
+Chromium's DevTools evaluation can itself grant user activation, so the previous
+fixed sleep followed by polling could contaminate the baseline. The original
+`activation == false` and `NotAllowedError` assertions remain, as do the trusted
+post-gesture playback and clipboard checks. A standalone native-browser probe
+checks the passive baseline in both engines; headed Linux audio/clipboard
+acceptance must still pass in CI.
+
 ### Delayed terminal focus regression
 
 The November 2, 2026 `main` CI run 41525591757 passed builds and 11/12 native

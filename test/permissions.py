@@ -10,12 +10,13 @@ import shutil
 import stat
 import struct
 import subprocess
-import time
 import uuid
 import zlib
 
 from harness import Fixture, wait_for
 from playwright.sync_api import sync_playwright
+
+BEFORE_AUDIO = 'HERDR_AUDIO_BEFORE_GESTURE:'
 
 
 def png():
@@ -61,6 +62,7 @@ document.addEventListener('paste',event=>permissionEvidence.pastes.push({trusted
 addEventListener('load',()=>setTimeout(async()=>{
   const api=await import('/desktop/runtime/herdr.js');
   await api.playSound('blocked');permissionEvidence.beforeComplete=true;
+  console.debug('HERDR_AUDIO_BEFORE_GESTURE:'+JSON.stringify(permissionEvidence.audio[0]));
 },100));
 '''
 
@@ -91,14 +93,13 @@ def main():
                 page.on('pageerror', lambda error: errors.append(str(error)))
                 page.add_init_script(INIT)
                 try:
-                    page.goto(fixture.url)
-                    time.sleep(1)
-                    page.bring_to_front()
-                    page.wait_for_selector('.terminal-pane[data-ready="true"]', timeout=20000)
-                    page.wait_for_function('()=>permissionEvidence.beforeComplete', timeout=15000)
-                    before = page.evaluate('permissionEvidence.audio[0]')
+                    with page.expect_console_message(lambda message: message.type == 'debug' and message.text.startswith(BEFORE_AUDIO), timeout=15000) as probe:
+                        page.goto(fixture.url)
+                    before = json.loads(probe.value.text[len(BEFORE_AUDIO):])
                     assert before['activation'] is False, before
                     assert before['outcome'] == 'NotAllowedError', before
+                    page.bring_to_front()
+                    page.wait_for_selector('.terminal-pane[data-ready="true"]', timeout=20000)
                     page.evaluate('''encoded=>{
                       const button=document.createElement('button');button.id='permission-clipboard';button.textContent='Write test image';button.style.cssText='position:fixed;top:5px;right:5px;z-index:30000';
                       button.onclick=async()=>{try{permissionEvidence.clipboard.activation=navigator.userActivation.isActive;const bytes=Uint8Array.from(atob(encoded),letter=>letter.charCodeAt(0));await navigator.clipboard.write([new ClipboardItem({'image/png':new Blob([bytes],{type:'image/png'})})]);permissionEvidence.clipboard.status='written';}catch(error){permissionEvidence.clipboard.error=error.name+': '+error.message;}};

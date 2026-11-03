@@ -37,7 +37,10 @@ jobs:
           sh -n build.sh
           sh -n tools/install.sh
       - name: Install pinned Rust toolchain
-        run: rustup show active-toolchain
+        run: |
+          toolchain=$(python3 -c 'import tomllib; print(tomllib.load(open("rust-toolchain.toml", "rb"))["toolchain"]["channel"])')
+          rustup toolchain install "$toolchain" --profile minimal --no-self-update
+          rustup show active-toolchain
       - name: Run locked Rust tests
         run: cargo test --locked --workspace
       - name: Build release executable
