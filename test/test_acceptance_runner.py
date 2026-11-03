@@ -1,4 +1,6 @@
+import contextlib
 import importlib.util
+import io
 import json
 import pathlib
 import sys
@@ -12,6 +14,10 @@ SPEC.loader.exec_module(acceptance)
 
 
 class AcceptanceRunnerTests(unittest.TestCase):
+    def setUp(self):
+        self.output = io.StringIO()
+        self.enterContext(contextlib.redirect_stdout(self.output))
+
     def test_failed_suite_is_reported_and_later_suites_still_run(self):
         with tempfile.TemporaryDirectory() as temporary:
             output = pathlib.Path(temporary)
@@ -25,6 +31,7 @@ class AcceptanceRunnerTests(unittest.TestCase):
             self.assertEqual([suite["exit_code"] for suite in report["suites"]], [7, 0])
             self.assertIn("failure evidence", (output / "failure.log").read_text())
             self.assertIn("later suite executed", (output / "success.log").read_text())
+            self.assertIn("Failed suites: failure", self.output.getvalue())
 
     def test_missing_command_fails_instead_of_skipping(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -34,6 +41,7 @@ class AcceptanceRunnerTests(unittest.TestCase):
             self.assertEqual(suite["status"], "failed")
             self.assertIsNone(suite["exit_code"])
             self.assertIn("error", suite)
+            self.assertIn("Failed suites: missing", self.output.getvalue())
 
     def test_all_successful_suites_return_success(self):
         with tempfile.TemporaryDirectory() as temporary:

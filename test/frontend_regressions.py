@@ -83,8 +83,16 @@ def shortcuts_and_dividers(page, fixture, first):
         'async()=>(await import("/desktop/runtime/herdr.js")).model.backendLayout.root.ratio>.59')
     page.keyboard.press('Home')
     expect(divider).to_have_attribute('aria-valuenow', '10')
-    page.keyboard.press('End')
-    expect(divider).to_have_attribute('aria-valuenow', '90')
+    with page.expect_response(lambda response: response.url.endswith('/api/command')
+                             and response.request.method == 'POST'
+                             and response.request.post_data_json.get('method') == 'layout.set_split_ratio'
+                             and response.request.post_data_json.get('params', {}).get('ratio') == .9) as saved:
+        page.keyboard.press('End')
+        expect(divider).to_have_attribute('aria-valuenow', '90')
+    assert saved.value.ok, saved.value.status
+    expect(divider).not_to_have_attribute('aria-busy', 'true')
+    persisted = fixture.rpc('layout.export', {'tab_id': selected(page)['tab']})
+    assert persisted['layout']['root']['ratio'] == .9, persisted
     page.reload()
     terminal(page, selected(page)['pane'])
     expect(page.get_by_role('separator', name='Resize panes')).to_have_attribute('aria-valuenow', '90')
@@ -94,7 +102,7 @@ def shortcuts_and_dividers(page, fixture, first):
         'async()=>(await import("/desktop/runtime/herdr.js")).model.backendLayout.root.ratio<.9')
 
 
-def remembered_tabs(page, fixture, first):
+def remembered_tabs(page, fixture, first, evidence):
     other_tab = fixture.post('/api/command', {
         'method': 'tab.create', 'params': {'workspace_id': first['space'], 'label': 'Remember me', 'focus': False}
     })
@@ -109,6 +117,7 @@ def remembered_tabs(page, fixture, first):
     assert selected(page)['tab'] == tab
 
     other = page.context.new_page()
+    other.add_init_script('sessionStorage.setItem("herdr-web.selection.v1", ' + json.dumps(json.dumps(first)) + ');')
     try:
         other.goto(fixture.url)
         choose_space(other, first['space'])
@@ -117,16 +126,22 @@ def remembered_tabs(page, fixture, first):
         choose_space(page, first['space'])
         assert selected(page)['tab'] == tab
         assert selected(other)['tab'] == first['tab']
-        fixture.post('/api/command', {'method': 'tab.close', 'params': {'tab_id': tab}})
-        expect(page.locator(f'[id="tab-{tab}"]')).to_have_count(0)
-        wait_for_browser(page,
-            'async tab=>(await import("/desktop/runtime/herdr.js")).model.selected.tab===tab', arg=first['tab'])
-        choose_space(page, second['space'])
-        choose_space(page, first['space'])
-        wait_for_browser(page,
-            'async tab=>(await import("/desktop/runtime/herdr.js")).model.selected.tab===tab', arg=first['tab'])
+        choose_space(other, second['space'])
+        terminal(other, second['pane'])
     finally:
-        other.close()
+        with other.expect_event('close'):
+            other.close(run_before_unload=True)
+    removed = {pane['pane_id'] for pane in fixture.rpc('session.snapshot')['snapshot']['panes'] if pane['tab_id'] == tab}
+    with evidence.expect_pane_removal(removed, lambda: not removed.intersection(
+            pane['pane_id'] for pane in fixture.rpc('session.snapshot')['snapshot']['panes'])):
+        fixture.post('/api/command', {'method': 'tab.close', 'params': {'tab_id': tab}})
+    expect(page.locator(f'[id="tab-{tab}"]')).to_have_count(0)
+    wait_for_browser(page,
+        'async tab=>(await import("/desktop/runtime/herdr.js")).model.selected.tab===tab', arg=first['tab'])
+    choose_space(page, second['space'])
+    choose_space(page, first['space'])
+    wait_for_browser(page,
+        'async tab=>(await import("/desktop/runtime/herdr.js")).model.selected.tab===tab', arg=first['tab'])
     pane = wait_for_browser(page,
         '''async ({space,tab})=>{
             const current=(await import("/desktop/runtime/herdr.js")).model.selected;
@@ -289,11 +304,11 @@ def right_click_modes(page, fixture, first):
     wait_for(lambda: 'MOUSE_RECOVERED' in fixture.read(pane))
 
 
-def run_frontend_regressions(page, fixture):
+def run_frontend_regressions(page, fixture, evidence):
     first = create_space(page)
     cases = [
         (shortcuts_and_dividers, (page, fixture, first)),
-        (remembered_tabs, (page, fixture, first)),
+        (remembered_tabs, (page, fixture, first, evidence)),
         (appearance_and_reset, (page, fixture)),
         (dialog_focus, (page,)),
         (child_agent, (page, fixture, first)),

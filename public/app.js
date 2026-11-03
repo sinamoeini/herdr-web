@@ -2,6 +2,7 @@ import * as desktop from "./desktop/runtime/herdr.js";
 import { pointer, forwardPopupContext } from "./desktop/runtime/gpui.js";
 import { validateLayout } from "./desktop/runtime/layouts.js";
 import { ImageScenes } from "./native-images.js";
+import { SplitRatioWriter } from "./split-ratio.js";
 
 const { model,request,run,theme,settings }=desktop;
 const application=document.getElementById("app"), overlayRoot=document.getElementById("overlays"), notifications=document.getElementById("notifications");
@@ -121,46 +122,47 @@ function renderTerminals(){
   const shown=desktop.panes().filter(pane=>pane.tab===model.selected.tab&&(!model.selected.zoom||pane.pane===model.selected.zoom));const ids=new Set(shown.map(pane=>pane.pane));
   for(const [id,view] of terminalViews)if(!ids.has(id)){view.dispose();terminalViews.delete(id);}
   for(const pane of shown){let view=terminalViews.get(pane.pane);if(!view){view=new PaneTerminal(pane);terminalViews.set(pane.pane,view);terminalContent.append(view.element);}view.pane=pane;view.element.classList.toggle("focused",pane.focused);view.element.style.borderRadius=`${model.paneAppearance.radius??10}px`;view.viewport.style.background=tint(model.paneAppearance.background||theme().background);view.header.style.height=`${model.paneAppearance.header?.height||30}px`;void panel(`pane-${pane.pane}-false`,model.paneAppearance.header?.content?.mod||"pane",view.header,{...model.paneAppearance.header?.content?.props,pane:pane.pane,terminal:pane.terminal});view.appearance(pane);}
-  terminalContent.querySelectorAll(".empty-session").forEach(node=>node.remove());
-  if(!shown.length){clearDividers();const empty=document.createElement("div");empty.className="empty-session";empty.textContent="No terminals yet. ";const create=document.createElement("button");create.textContent="Create space";create.onclick=()=>run("space.new");empty.append(create);terminalContent.append(empty);return;}
+  let empty=terminalContent.querySelector(".empty-session");
+  if(!shown.length){clearDividers();if(!empty){empty=document.createElement("div");empty.className="empty-session";empty.textContent="No terminals yet. ";const create=document.createElement("button");create.textContent="Create space";create.onclick=()=>run("space.new");empty.append(create);terminalContent.append(empty);}return;}
+  empty?.remove();
   const place=(node,rect,path=[])=>{
     if(node.type==="pane"){const view=terminalViews.get(node.pane_id);if(view){const gap=(model.paneAppearance.gap||8)/2;Object.assign(view.element.style,{left:`calc(${rect.x*100}% + ${gap}px)`,top:`calc(${rect.y*100}% + ${gap}px)`,width:`calc(${rect.width*100}% - ${gap*2}px)`,height:`calc(${rect.height*100}% - ${gap*2}px)`});}return;}
-    const horizontal=node.direction==="right";const ratio=node.ratio||.5;
-    place(node.first,{...rect,[horizontal?"width":"height"]:(horizontal?rect.width:rect.height)*ratio},[...path,false]);
-    place(node.second,{...rect,[horizontal?"x":"y"]:(horizontal?rect.x:rect.y)+(horizontal?rect.width:rect.height)*ratio,[horizontal?"width":"height"]:(horizontal?rect.width:rect.height)*(1-ratio)},[...path,true]);
     const key=JSON.stringify([model.selected.tab,path]);usedDividers.add(key);
     let divider=dividers.get(key);
+    const horizontal=node.direction==="right";const ratio=divider?.writer?.pending??node.ratio??.5;
+    place(node.first,{...rect,[horizontal?"width":"height"]:(horizontal?rect.width:rect.height)*ratio},[...path,false]);
+    place(node.second,{...rect,[horizontal?"x":"y"]:(horizontal?rect.x:rect.y)+(horizontal?rect.width:rect.height)*ratio,[horizontal?"width":"height"]:(horizontal?rect.width:rect.height)*(1-ratio)},[...path,true]);
     if(!divider){
       divider=document.createElement("div");divider.tabIndex=0;
       divider.setAttribute("role","separator");divider.setAttribute("aria-label","Resize panes");
       divider.setAttribute("aria-valuemin","10");divider.setAttribute("aria-valuemax","90");
       dividers.set(key,divider);terminalContent.append(divider);
-      const save=async(split,value)=>{
-        split.node.ratio=Math.max(.1,Math.min(.9,value));
-        divider.setAttribute("aria-valuenow",String(Math.round(split.node.ratio*100)));
-        try{await request("/api/command",{method:"layout.set_split_ratio",params:{tab_id:split.tab,path:split.path,ratio:split.node.ratio}});await refresh.request();}
-        catch(error){notice(error.message);}
-      };
+      divider.writer=new SplitRatioWriter(
+        params=>request("/api/command",{method:"layout.set_split_ratio",params}),
+        ()=>refresh.request(),
+        ()=>{if(divider.writer.pending===null)divider.removeAttribute("aria-busy");else{divider.setAttribute("aria-busy","true");divider.setAttribute("aria-valuenow",String(Math.round(divider.writer.pending*100)));}scheduleRender();},
+        error=>notice(error.message),
+      );
       divider.onkeydown=event=>{
         const split=divider.split,keys=split.horizontal?["ArrowLeft","ArrowRight"]:["ArrowUp","ArrowDown"];
         if(!keys.includes(event.key)&&!["Home","End"].includes(event.key))return;
         event.preventDefault();event.stopPropagation();
-        const ratio=event.key==="Home"?.1:event.key==="End"?.9:split.node.ratio+(event.key===keys[1]?.05:-.05);
-        void save(split,ratio);
+        const ratio=event.key==="Home"?.1:event.key==="End"?.9:(divider.writer.pending??split.node.ratio)+(event.key===keys[1]?.05:-.05);
+        void divider.writer.save(split,ratio);
       };
       divider.onpointerdown=event=>{
         if(event.button!==0)return;
         event.preventDefault();divider.focus();divider.setPointerCapture(event.pointerId);
         const split=divider.split,bounds=terminalContent.getBoundingClientRect();
-        let ratio=split.node.ratio;
+        let ratio=divider.writer.pending??split.node.ratio;
         const move=event=>{
           const value=split.horizontal?((event.clientX-bounds.left)/bounds.width-split.rect.x)/split.rect.width:((event.clientY-bounds.top)/bounds.height-split.rect.y)/split.rect.height;
           ratio=Math.max(.1,Math.min(.9,value));divider.setAttribute("aria-valuenow",String(Math.round(ratio*100)));
         };
         const stop=()=>{divider.onpointermove=null;divider.onpointerup=null;divider.onpointercancel=null;if(divider.hasPointerCapture(event.pointerId))divider.releasePointerCapture(event.pointerId);};
         divider.onpointermove=move;
-        divider.onpointerup=event=>{move(event);stop();void save(split,ratio);};
-        divider.onpointercancel=()=>{stop();divider.setAttribute("aria-valuenow",String(Math.round(divider.split.node.ratio*100)));};
+        divider.onpointerup=event=>{move(event);stop();void divider.writer.save(split,ratio);};
+        divider.onpointercancel=()=>{stop();divider.setAttribute("aria-valuenow",String(Math.round((divider.writer.pending??divider.split.node.ratio)*100)));};
       };
     }
     divider.split={node,path,tab:model.selected.tab,horizontal,rect};

@@ -13,6 +13,11 @@ The initial release is in preparation. No binary release is published yet.
 
 ### Fixed
 
+- Preserve the empty-session Create space button across refreshes so an in-progress click is not lost.
+- Observe the audio permission baseline passively before test automation can grant user activation.
+- Serialize split-divider saves, preserve the latest pending ratio, and verify backend persistence before reload in UI acceptance.
+- Fail UI acceptance on unexpected HTTP, console, page, and active WebSocket errors; retain narrowly classified expected errors in artifacts.
+- Capture expected acceptance-runner self-test output and explicitly install the pinned Rust toolchain in CI.
 - Prevent a terminal attachment that becomes ready late from stealing focus from the newly selected split pane.
 Ctrl+L now reaches the focused terminal, so the shell can clear the screen.
 
