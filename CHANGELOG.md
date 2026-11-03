@@ -6,6 +6,8 @@ The initial release is in preparation. No binary release is published yet.
 
 ### Added
 
+- Build and smoke-test a Docker image in CI; publish passing `main` pushes to GHCR with commit-SHA and latest tags.
+- Start an isolated Herdr backend and the web server automatically when the Docker container starts.
 - Select the remote web port in the machine dialog and view each connection's port.
 - Connect to separate Herdr Web instances on one SSH host and disconnect each forward independently.
 - Run opt-in acceptance against an existing isolated remote instance with `test/ssh_remote.py`.
@@ -19,6 +21,8 @@ The initial release is in preparation. No binary release is published yet.
 - Fail UI acceptance on unexpected HTTP, console, page, and active WebSocket errors; retain narrowly classified expected errors in artifacts.
 - Capture expected acceptance-runner self-test output and explicitly install the pinned Rust toolchain in CI.
 - Prevent a terminal attachment that becomes ready late from stealing focus from the newly selected split pane.
+- Change the default native, plugin, and remote-machine web port to 8000.
+
 Ctrl+L now reaches the focused terminal, so the shell can clear the screen.
 
 - Restore child-agent launch from the pane menu through the existing backend.

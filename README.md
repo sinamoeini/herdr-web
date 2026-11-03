@@ -4,7 +4,7 @@
 
 The Herdr desktop interface in your browser, powered by the original Herdr server.
 One Rust executable includes the UI, fonts, icons, and terminal renderer. Closing
-the browser or restarting the web interface preserves backend-owned terminals.
+the browser preserves backend-owned terminals, as do native web-only restarts.
 
 Native plugin integration is implemented, with recorded Chromium and Firefox
 acceptance results. This project is not a claim of upstream endorsement or complete
@@ -13,12 +13,36 @@ desktop parity. See [acceptance and limitations](docs/ACCEPTANCE.md).
 ## Supported platform
 
 - Linux x86_64; release binaries are built on Ubuntu 24.04 with glibc.
-- Original Herdr **0.9.5**, public protocol **22**, installed separately.
+- Original Herdr **0.9.5**, public protocol **22**; installed separately for native use, bundled in Docker.
 - Browser panels/assets pinned to Herdr app **0.1.11**; native desktop engine fixes are not included.
-- Chromium or Firefox and an existing interactive Herdr session.
+- Chromium or Firefox; native operation connects to an existing Herdr session.
 
 Other operating systems, architectures, and Herdr versions are not certified.
-The interface listens on loopback only; public/shared hosting is unsupported.
+Native startup listens on loopback only; Docker uses a container-network listener
+that must be published to host loopback. Public/shared hosting is unsupported.
+
+## Run with Docker
+
+Successful CI runs on pushes to `main` publish a Linux amd64 image to GHCR:
+
+```sh
+docker run -d --name herdr-web --platform linux/amd64 --stop-timeout 20 \
+  -p 127.0.0.1:8000:8000 \
+  -v herdr-web-home:/home/herdr \
+  ghcr.io/sinamoeini/herdr-web:latest
+```
+
+Open `http://127.0.0.1:8000`. Starting the container automatically starts its own
+Herdr 0.9.5 backend, waits for it to be ready, then starts the web server on port
+**8000**. No host Herdr installation is needed. Terminals and files are inside the
+container, not your host session. The named volume retains home files across
+container replacement, but stopping/restarting the container ends its shell
+processes. Native web-only restarts still preserve backend-owned terminals.
+
+Use `:sha-<full-commit-SHA>` instead of `:latest` to select a specific passing
+`main` commit. Images appear after CI succeeds; private packages require a GHCR
+login. See [Docker operations](docs/OPERATIONS.md#docker) for building locally,
+changing ports, and security limitations.
 
 ## Install a release
 
@@ -40,7 +64,7 @@ herdr plugin action invoke local.herdr-web.status
 Substitute the downloaded version in the archive and directory names. Keep the
 extracted directory available: the linked plugin runs its bundled executable.
 For a named session, put `--session NAME` before `plugin` in each command.
-Open the URL reported by Status, normally `http://127.0.0.1:8004`.
+Open the URL reported by Status, normally `http://127.0.0.1:8000`.
 
 Alternatively, run the downloaded executable directly:
 

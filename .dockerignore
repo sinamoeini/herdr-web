@@ -1,0 +1,17 @@
+**
+!Cargo.toml
+!Cargo.lock
+!rust-toolchain.toml
+!build.sh
+!server/
+!server/**
+!public/
+!public/**
+!tools/
+!tools/docker-entrypoint.py
+!LICENSE
+!THIRD_PARTY_NOTICES.md
+!PORT.md
+**/__pycache__/
+**/*.pyc
+**/.DS_Store

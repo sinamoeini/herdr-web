@@ -14,7 +14,7 @@ pub fn validate(value: &Value) -> Result<Destination> {
         || host.matches('@').count() > 1 || host.starts_with('@') || host.ends_with('@') {
         return Err(Error::bad("unsupported SSH destination; use an SSH config alias or user@host"));
     }
-    let port = value.get("port").map(|value| validation::integer(value, "port", 1, 65535)).transpose()?.unwrap_or(8004) as u16;
+    let port = value.get("port").map(|value| validation::integer(value, "port", 1, 65535)).transpose()?.unwrap_or(u64::from(crate::DEFAULT_PORT)) as u16;
     Ok(Destination { host: host.to_owned(), port })
 }
 
@@ -105,7 +105,7 @@ mod tests {
             assert!(validate(&json!({"action":"connect", "host":"test-host", "port":port})).is_err());
         }
         let destination = validate(&json!({"action":"connect", "host":"user@test-host", "port":8004})).unwrap();
-        assert_eq!(validate(&json!({"action":"connect","host":"test-host"})).unwrap().port,8004);
+        assert_eq!(validate(&json!({"action":"connect","host":"test-host"})).unwrap().port,8000);
         for port in [1,65535]{
             assert_eq!(validate(&json!({"action":"connect","host":"test-host","port":port})).unwrap().port,port as u16);
         }

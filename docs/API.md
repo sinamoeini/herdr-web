@@ -23,7 +23,7 @@ IDs are opaque and distinct. Never substitute a terminal ID for a pane ID, or a 
 | `GET /api/mods` | None | Bare array of registered trusted panel names, e.g. `["notes"]` |
 | `GET /user-mods/NAME/PATH` | Approved contained custom asset | JS/JSON/CSS/SVG/PNG bytes, at most 2 MiB |
 | `GET /api/machines` | None | Bare array `[{host,port,local_port,url,pid}]` of active owned forwards |
-| `POST /api/machines` | `{action:"connect",host,port?}` | `{host,port,local_port,url,pid}`, only after forwarding readiness; port defaults to 8004 |
+| `POST /api/machines` | `{action:"connect",host,port?}` | `{host,port,local_port,url,pid}`, only after forwarding readiness; port defaults to 8000 |
 | `POST /api/machines` | `{action:"disconnect",host,port?}` | `{disconnected:true}` or `{disconnected:false}` |
 
 An SSH destination uses the host and remote web port as its connection identity.

@@ -26,7 +26,10 @@ separate maintenance commitment. Compatibility is currently scoped to Linux
 x86_64 and original Herdr 0.9.5; see `docs/ACCEPTANCE.md` for verification limits.
 
 The web executable has the local user's file and terminal privileges. It listens
-on loopback and is not designed for unauthenticated public/shared hosting.
+on loopback by default and is not designed for unauthenticated public/shared hosting.
+The Docker image explicitly binds all container interfaces for port publishing;
+publish only to host loopback (`-p 127.0.0.1:8000:8000`) and do not share its
+container network with untrusted workloads. Host/Origin checks are not authentication.
 Trusted custom panels run with page privileges, not in a sandbox. Never expose
 the listener through a public proxy without a separate authentication design.
 

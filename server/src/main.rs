@@ -20,6 +20,17 @@ use error::{Error, Result};
 
 include!(concat!(env!("OUT_DIR"), "/assets.rs"));
 
+pub const DEFAULT_PORT: u16 = 8000;
+
+fn listener_address(port: u16, bind: Option<&str>) -> Result<std::net::SocketAddrV4> {
+    let address = match bind.unwrap_or("127.0.0.1") {
+        "127.0.0.1" => std::net::Ipv4Addr::LOCALHOST,
+        "0.0.0.0" => std::net::Ipv4Addr::UNSPECIFIED,
+        _ => return Err(Error::bad("HERDR_WEB_BIND must be 127.0.0.1 or 0.0.0.0")),
+    };
+    Ok(std::net::SocketAddrV4::new(address, port))
+}
+
 struct Services {
     backend: Option<Arc<backend::Backend>>,
     shutdown: tokio::sync::watch::Receiver<bool>,
@@ -214,13 +225,14 @@ async fn run() -> Result<()> {
         match plugin::prepare(&arguments[1]).await?{Some(runtime)=>Some(runtime),None=>return Ok(())}
     }else{None};
     if arguments == ["--help"] {
-        println!("Herdr Web 0.1.0\n\nUsage: herdr-web\n       herdr-web plugin start|stop|restart|status\n       herdr-web --diagnostics\n\nConnects to original Herdr 0.9.5 (public protocol 22).\nEnvironment: HERDR_BIN, HERDR_SESSION, HERDR_CONFIG_PATH, HERDR_WEB_MODS, PORT.\nDefault listener: http://127.0.0.1:8004; PORT=0 selects an available port.\nPlugin actions require the context supplied by Herdr.\nDiagnostic mode has no backend but retains local file/Git privileges.\nSee README.md for operation and docs/ACCEPTANCE.md for verification status.");
+        println!("Herdr Web 0.1.0\n\nUsage: herdr-web\n       herdr-web plugin start|stop|restart|status\n       herdr-web --diagnostics\n\nConnects to original Herdr 0.9.5 (public protocol 22).\nEnvironment: HERDR_BIN, HERDR_SESSION, HERDR_CONFIG_PATH, HERDR_WEB_MODS, HERDR_WEB_BIND, PORT.\nDefault listener: http://127.0.0.1:8000; PORT=0 selects an available port.\nHERDR_WEB_BIND=0.0.0.0 enables container networking; publish only to host loopback.\nPlugin actions require the context supplied by Herdr and always bind loopback.\nDiagnostic mode has no backend but retains local file/Git privileges.\nSee README.md for operation and docs/ACCEPTANCE.md for verification status.");
         return Ok(());
     }
     if plugin.is_none()&&!arguments.is_empty() && arguments != ["--diagnostics"] { return Err(Error::bad("usage: herdr-web [--diagnostics] | plugin start|stop|restart|status")); }
     let backend=if let Some(plugin)=&plugin{Some(plugin.backend.clone())}else if arguments.is_empty(){Some(backend::Backend::discover().await?)}else{None};
-    let port=if let Some(plugin)=&plugin{plugin.port}else{std::env::var("PORT").unwrap_or_else(|_|"8004".into()).parse::<u16>().map_err(|_|Error::bad("PORT must be an integer from 0 through 65535"))?};
-    let listener = tokio::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, port)).await?;
+    let port=if let Some(plugin)=&plugin{plugin.port}else{std::env::var("PORT").unwrap_or_else(|_|DEFAULT_PORT.to_string()).parse::<u16>().map_err(|_|Error::bad("PORT must be an integer from 0 through 65535"))?};
+    let bind = if plugin.is_some() { None } else { std::env::var("HERDR_WEB_BIND").ok() };
+    let listener = tokio::net::TcpListener::bind(listener_address(port, bind.as_deref())?).await?;
     let address = listener.local_addr()?;
     let mods = std::env::var_os("HERDR_WEB_MODS").map(PathBuf::from);
     let (shutdown, receiver) = tokio::sync::watch::channel(false);
@@ -256,4 +268,23 @@ async fn run() -> Result<()> {
 #[tokio::main]
 async fn main() {
     if let Err(error) = run().await { eprintln!("herdr-web: {error}"); std::process::exit(1); }
+}
+
+#[cfg(test)]
+mod listener_tests {
+    use super::*;
+
+    #[test]
+    fn native_listener_defaults_to_loopback_port_8000() {
+        assert_eq!(listener_address(DEFAULT_PORT, None).unwrap().to_string(), "127.0.0.1:8000");
+    }
+
+    #[test]
+    fn container_binding_is_explicit_and_restricted() {
+        assert_eq!(listener_address(DEFAULT_PORT, Some("0.0.0.0")).unwrap().to_string(), "0.0.0.0:8000");
+        assert_eq!(listener_address(0, Some("127.0.0.1")).unwrap().port(), 0);
+        for invalid in ["", "localhost", "192.168.1.1", "0.0.0.0:8000"] {
+            assert!(listener_address(DEFAULT_PORT, Some(invalid)).is_err());
+        }
+    }
 }

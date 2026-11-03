@@ -108,7 +108,7 @@ pub async fn prepare(action:&str)->Result<Option<Runtime>>{
     if control_path.exists(){std::fs::remove_file(&control_path)?;}
     let backend=Backend::connect(binary,socket).await?;
     registration(&backend,&root).await?;
-    let port=match std::fs::read_to_string(config.join("port")){Ok(value)=>value.trim().parse::<u16>().map_err(|_|Error::bad("plugin port file must contain an integer from 0 through 65535"))?,Err(error) if error.kind()==std::io::ErrorKind::NotFound=>std::env::var("PORT").unwrap_or_else(|_|"8004".into()).parse().map_err(|_|Error::bad("invalid PORT"))?,Err(error)=>return Err(error.into())};
+    let port=match std::fs::read_to_string(config.join("port")){Ok(value)=>value.trim().parse::<u16>().map_err(|_|Error::bad("plugin port file must contain an integer from 0 through 65535"))?,Err(error) if error.kind()==std::io::ErrorKind::NotFound=>std::env::var("PORT").unwrap_or_else(|_|crate::DEFAULT_PORT.to_string()).parse().map_err(|_|Error::bad("invalid PORT"))?,Err(error)=>return Err(error.into())};
     let parent=unsafe{libc::getppid()} as u32;
     Ok(Some(Runtime{backend,port,root,control:control_path,parent,parent_identity:parent_identity(parent)?,tasks:Vec::new(),_lock:lock}))
 }

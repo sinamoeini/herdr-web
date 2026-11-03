@@ -179,7 +179,7 @@ def import_assets(arguments):
                 end=text.index('      await this.refresh();',start)
                 text=text[:start]+'      } else this.state[target] = why.message || "SSH forwarding failed";\n'+text[end:]
                 text=text.replace("A VPS, a Mac mini, a box at home: Herdr reaches it over ssh, and agents there keep running while your laptop sleeps.","Use your existing SSH keys and known_hosts. The remote machine must already run Herdr Web on loopback. Each connection opens a separate browser window.")
-                text=text.replace('    this.input = InputState.new', '''    this.port = InputState.new({ value: "8004" });
+                text=text.replace('    this.input = InputState.new', '''    this.port = InputState.new({ value: "8000" });
     this.portError = "";
     this.port.on("change", (_e, cx) => { this.portError = ""; cx.notify(); });
     this.port.on("submit", (_e, cx) => this.add(this.typed, cx));
@@ -218,7 +218,7 @@ def import_assets(arguments):
           .attr("aria-describedby", "ma-port-help").attr("aria-invalid", String(Boolean(this.portError)))
           .h(34).px(10).rounded(8).border_1().border_color(t.input).bg(t.background).text_color(t.foreground))
         .child(div().id("ma-port-help").text_size(12).text_color(t.muted)
-          .child("Default: 8004. SSH uses the port in your SSH configuration."))
+          .child("Default: 8000. SSH uses the port in your SSH configuration."))
         .when(Boolean(this.portError), el => el.child(div().id("ma-port-error").attr("role", "alert")
           .text_size(12).text_color(t.blocked).child(this.portError))))
       .child(this.connections(t))

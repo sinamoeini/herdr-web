@@ -14,6 +14,19 @@ and audio tests on isolated X11/private PulseAudio. This is not physical-device
 or external-host certification; the historical foundation-only fixture is not
 used as a substitute for desktop acceptance.
 
+After those checks pass, CI builds and smoke-tests a Linux amd64 Docker image.
+Pull requests never publish images. Pushes to `main` publish to GHCR with
+`sha-<full-commit-SHA>`; a serialized promotion updates `latest` only for the
+current `main` tip. Publishing uses the built-in GitHub token with job-scoped
+`packages: write`, not Docker Hub or a personal token. Each pushed tip gets an
+image; intermediate commits within one push do not. Push runs are not cancelled
+by newer commits; obsolete pull-request runs may be cancelled. The Docker smoke
+test checks port 8000, real terminal input/output, Host/Origin rejection, non-root
+runtime, health, clean shutdown/restart, home-volume persistence across container
+replacement, an internal port override, and cleanup when either child fails.
+Lifecycle logs and container metadata are retained as separate Docker artifacts;
+intentional child failures do not print misleading errors into successful logs.
+
 A pushed `v*` tag runs the Linux release workflow. It verifies that the tag agrees
 with both Cargo and plugin versions, requires the same acceptance job to pass,
 runs checks, builds on Ubuntu 24.04, packages

@@ -188,7 +188,7 @@ def exercise(bridge, observer, host, port, result):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--host', help='Existing trusted SSH alias or user@host for an isolated test instance')
-    parser.add_argument('--port', type=int, default=8004, help='Remote Herdr Web listener port, not the SSH port')
+    parser.add_argument('--port', type=int, default=8000, help='Remote Herdr Web listener port, not the SSH port')
     parser.add_argument('--remote-source', help='Optional remote Herdr Web commit SHA, supplied by its operator')
     parser.add_argument('--output', type=pathlib.Path, default=ROOT / 'test-results/ssh-remote/results.json')
     args = parser.parse_args()
