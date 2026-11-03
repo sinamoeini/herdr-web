@@ -92,7 +92,7 @@ class PaneTerminal{
   }
   async start(){
     await document.fonts.load(`${settings().font_size||14}px "${settings().font||"JetBrains Mono"}"`);await document.fonts.ready;if(this.disposed)return;
-    this.terminal=new globalThis.Terminal({fontFamily:`"${settings().font||"JetBrains Mono"}","JetBrains Mono","Symbols Nerd Font",monospace`,fontSize:settings().font_size||14,allowProposedApi:false,scrollback:5000,convertEol:false,cursorBlink:true,theme:terminalTheme()});
+    this.terminal=new globalThis.Terminal({fontFamily:`"${settings().font||"JetBrains Mono"}","JetBrains Mono","Symbols Nerd Font",monospace`,fontSize:settings().font_size||14,allowProposedApi:false,scrollback:5000,convertEol:false,cursorBlink:true,macOptionClickForcesSelection:true,theme:terminalTheme()});
     this.fitAddon=new globalThis.FitAddon.FitAddon();this.terminal.loadAddon(this.fitAddon);this.terminal.open(this.host);this.viewport.append(this.canvas);this.images=new ImageScenes(this.canvas,error=>notice(`Graphics: ${error.message}`));
     this.terminal.onData(data=>{if(this.ready&&this.socket?.readyState===WebSocket.OPEN)this.socket.send(JSON.stringify({type:"input",data}));});
     this.terminal.attachCustomKeyEventHandler(event=>{if(desktop.reservedKey(event))return false;if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="v")return false;if(event.ctrlKey&&event.shiftKey&&["p","c"].includes(event.key.toLowerCase()))return false;const dialog=[...document.querySelectorAll(".web-dialog")].at(-1);return !dialog||dialog.contains(this.element);});
