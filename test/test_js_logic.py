@@ -72,6 +72,44 @@ class LogicTests(unittest.TestCase):
                 source = re.sub(r"\bexport\s+(?=(?:class|function|const|async)\b)", "", source)
                 self.javascript.evaluate(f"new Function({json.dumps(source)}); 'parsed'")
 
+    def test_delayed_terminal_readiness_does_not_steal_selected_pane_focus(self):
+        source = (ROOT / "public/app.js").read_text()
+        terminal_class = "class PaneTerminal{" + source.split("class PaneTerminal{", 1)[1].split("\nfunction terminalTheme()", 1)[0]
+        result = self.javascript.evaluate(terminal_class + """
+            const model = {selected: {pane: 'original'}};
+            const document = {querySelectorAll: () => [], querySelector: () => null};
+            let active = null;
+            function view(pane, ready, preview = false) {
+                return Object.assign(Object.create(PaneTerminal.prototype), {
+                    pane: {pane}, preview, ready, disposed: false,
+                    element: {dataset: {}},
+                    terminal: {options: {}, focus: () => { active = pane; }},
+                });
+            }
+            const original = view('original', false);
+            original.focus();
+            const queued = original.wantsFocus;
+            const split = view('split', false);
+            model.selected.pane = 'split';
+            split.focus();
+            split.inputReady(true);
+            original.inputReady(true);
+            const afterLateReady = active;
+            original.focus();
+            const afterStaleRequest = active;
+            const preview = view('preview', true, true);
+            preview.focus();
+            JSON.stringify({queued, afterLateReady, afterStaleRequest,
+                stalePending: original.wantsFocus, originalReady: original.ready,
+                originalInputEnabled: !original.terminal.options.disableStdin,
+                previewFocus: active});
+        """)
+        self.assertEqual(json.loads(result), {
+            "queued": True, "afterLateReady": "split", "afterStaleRequest": "split",
+            "stalePending": False, "originalReady": True,
+            "originalInputEnabled": True, "previewFocus": "preview",
+        })
+
     def test_all_adapted_official_panels_and_application_parse(self):
         sources=list((ROOT/'public/desktop').rglob('*.js'))+[ROOT/'public/app.js']
         for path in sources:

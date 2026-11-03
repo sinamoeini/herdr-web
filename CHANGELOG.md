@@ -13,6 +13,7 @@ The initial release is in preparation. No binary release is published yet.
 
 ### Fixed
 
+- Prevent a terminal attachment that becomes ready late from stealing focus from the newly selected split pane.
 Ctrl+L now reaches the focused terminal, so the shell can clear the screen.
 
 - Restore child-agent launch from the pane menu through the existing backend.

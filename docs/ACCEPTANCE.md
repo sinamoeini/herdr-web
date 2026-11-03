@@ -20,6 +20,18 @@ asset upgrade.
 
 ## Environment and evidence
 
+### Delayed terminal focus regression
+
+The November 2, 2026 `main` CI run 41525591757 passed builds and 11/12 native
+acceptance suites, but Firefox timed out waiting for keyboard focus on a newly
+split pane in `ui.py`. The saved focus trace shows the new pane receiving focus,
+then the original pane stealing it when its delayed attachment became ready;
+browser selection remained on the new pane. Focus now rejects stale requests
+for unselected non-preview panes. A JavaScriptCore regression reproduces the
+late-readiness ordering and fails before the fix. This logic test is not a new
+Linux/Firefox acceptance run; the existing real-terminal split/input assertion
+remains unchanged and must pass in CI.
+
 ### Machine enhancements, November 2, 2026
 
 The expanded `ssh.py` suite passes locally with original Herdr 0.9.5.
