@@ -42,4 +42,4 @@ mv -f "$temporary_binary" "$bin_directory/herdr-web"
 printf 'Installed: %s/herdr-web\n' "$bin_directory"
 printf '%s\n' 'No backend or service was started/stopped.' \
     'Choose the intended session, then follow README.md standalone or native-plugin instructions.' \
-    'Check listeners before starting; never stop an unrelated owner of port 8004.'
+    'Check listeners before starting; never stop an unrelated owner of port 8000.'

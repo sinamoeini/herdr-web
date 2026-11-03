@@ -29,9 +29,9 @@ Prerequisites: Linux, Rust/Cargo supporting edition 2024 and the lockfile, a C l
 ./build.sh
 # Runs: cargo build --locked --release -p herdr-web
 herdr session list --json
-HERDR_BIN="$(command -v herdr)" PORT=8004 ./target/release/herdr-web
+HERDR_BIN="$(command -v herdr)" PORT=8000 ./target/release/herdr-web
 # Or select an existing named session:
-HERDR_BIN="$(command -v herdr)" HERDR_SESSION=example PORT=8004 \
+HERDR_BIN="$(command -v herdr)" HERDR_SESSION=example PORT=8000 \
   ./target/release/herdr-web
 ```
 
@@ -49,7 +49,8 @@ Keep the foreground process under your chosen supervisor and retain its PID/logs
 | `HERDR_SESSION` | Standalone session name; default `default` |
 | `HERDR_CONFIG_PATH` | Intended Herdr configuration, preserved for discovery/attachments |
 | `HERDR_WEB_MODS` | Optional directory of trusted custom-panel folders |
-| `PORT` | HTTP port; default 8004, 0 selects an available port |
+| `PORT` | HTTP port; default 8000, 0 selects an available port |
+| `HERDR_WEB_BIND` | Standalone listener address: `127.0.0.1` (default) or `0.0.0.0` (Docker); native plugins always use loopback |
 | `HOME`, `PATH`, `SHELL` | User home, installed-program discovery, supported shell environment |
 
 Plugin context instead requires Herdr-supplied `HERDR_PLUGIN_ID`, `HERDR_SOCKET_PATH`, `HERDR_BIN_PATH`, `HERDR_PLUGIN_ROOT`, `HERDR_PLUGIN_CONFIG_DIR`, and `HERDR_PLUGIN_STATE_DIR`. The exact supplied plugin socket wins over conflicting ambient session selection. Attachment children clear unrelated `HERDR_*` values and explicitly receive the selected socket/configuration. Do not manufacture plugin context for normal installation.
@@ -70,7 +71,7 @@ herdr plugin action invoke local.herdr-web.stop
 
 For a named session place `--session NAME` **before** `plugin` in each command. Find configuration with `herdr plugin config-dir local.herdr-web`. Its optional `port` file overrides inherited `PORT` (0 is supported). Different backend servers need available listener ports.
 
-Start/Restart remain foreground children of the native plugin action, without a visible hosting tab or detached daemon. A private per-backend control socket/flock provides single-instance ownership. Status reports `{"running":true,"url":"http://127.0.0.1:8004","pid":12345}`. The lock stays held while HTTP drains. Disable, unlink, changed registration root, backend loss, or parent loss requests shutdown. A new Herdr server requires an **explicit Start action**; no automatic startup hook exists.
+Start/Restart remain foreground children of the native plugin action, without a visible hosting tab or detached daemon. A private per-backend control socket/flock provides single-instance ownership. Status reports `{"running":true,"url":"http://127.0.0.1:8000","pid":12345}`. The lock stays held while HTTP drains. Disable, unlink, changed registration root, backend loss, or parent loss requests shutdown. A new Herdr server requires an **explicit Start action**; no automatic startup hook exists.
 
 ## Browser operation
 
@@ -101,9 +102,9 @@ A managed worker is a separate Herdr terminal linked by backend metadata, not an
 
 ```sh
 curl --fail-with-body \
-  -H 'Origin: http://127.0.0.1:8004' -H 'Content-Type: application/json' \
+  -H 'Origin: http://127.0.0.1:8000' -H 'Content-Type: application/json' \
   --data '{"parent":"REAL_PARENT_TERMINAL_ID","name":"reviewer","argv":["codex"]}' \
-  http://127.0.0.1:8004/api/child-terminal
+  http://127.0.0.1:8000/api/child-terminal
 ```
 
 Result: `{terminal,pane,parent}`. Empty `argv` creates a terminal without launching a command. Arguments are individually shell-quoted, including empty strings/single quotes; there is no generic HTTP shell-script endpoint. Source `herdr-web` stores `web_parent`/`web_name` metadata (long names use continuation tokens). Limits: 64 children/session, 32 levels, parent/name 128 bytes, 128 arguments of 8,192 bytes each, no NUL. Closing a parent does not close children.
@@ -122,7 +123,7 @@ The listener binds **127.0.0.1 only**. Host accepts only parsed localhost/127.0.
 
 Remote machines must already run Herdr Web. The machine picker creates an owned noninteractive SSH forward using existing keys/known-host records and strict host-key checks, targeting remote loopback. Maximum eight forwards. Instances open in **separate windows**, not a merged sidebar. Disconnect/shutdown reaps only owned forwards, not remote services.
 
-The dialog's remote web port defaults to 8004.
+The dialog's remote web port defaults to 8000.
 It accepts integers from 1 to 65535 and rejects invalid values before SSH starts.
 SSH uses the SSH port from your existing configuration.
 The connection list shows each host and remote web port.
@@ -135,7 +136,7 @@ Manual equivalent:
 
 ```sh
 ssh -N -T -o BatchMode=yes -o StrictHostKeyChecking=yes \
-  -o ExitOnForwardFailure=yes -L 127.0.0.1:8004:127.0.0.1:8004 -- HOST
+  -o ExitOnForwardFailure=yes -L 127.0.0.1:8000:127.0.0.1:8000 -- HOST
 ```
 
 Successful external-host SSH remains untested without a supplied host.

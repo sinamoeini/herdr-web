@@ -36,7 +36,7 @@ export default class MachineAdd extends View {
     this.added = [];
     this.state = {}; // target -> "adding" | "terminal" | error text
     this.typed = "";
-    this.port = InputState.new({ value: "8004" });
+    this.port = InputState.new({ value: "8000" });
     this.portError = "";
     this.port.on("change", (_e, cx) => { this.portError = ""; cx.notify(); });
     this.port.on("submit", (_e, cx) => this.add(this.typed, cx));
@@ -332,7 +332,7 @@ export default class MachineAdd extends View {
           .attr("aria-describedby", "ma-port-help").attr("aria-invalid", String(Boolean(this.portError)))
           .h(34).px(10).rounded(8).border_1().border_color(t.input).bg(t.background).text_color(t.foreground))
         .child(div().id("ma-port-help").text_size(12).text_color(t.muted)
-          .child("Default: 8004. SSH uses the port in your SSH configuration."))
+          .child("Default: 8000. SSH uses the port in your SSH configuration."))
         .when(Boolean(this.portError), el => el.child(div().id("ma-port-error").attr("role", "alert")
           .text_size(12).text_color(t.blocked).child(this.portError))))
       .child(this.connections(t))

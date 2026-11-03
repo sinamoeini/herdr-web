@@ -107,6 +107,16 @@ late-readiness ordering and fails before the fix. This logic test is not a new
 Linux/Firefox acceptance run; the existing real-terminal split/input assertion
 remains unchanged and must pass in CI.
 
+### Docker and port 8000
+
+The default native, plugin, and remote-machine web port is now 8000. The machine
+dialog acceptance assertion follows the new default; the November 2 results
+below record the earlier 8004 behavior, not a new verification run. Docker adds
+a CI-only real-image smoke test for automatic backend/web startup, API readiness,
+real terminal input/output, Host/Origin rejection, health, restart, persistent
+home volumes, an internal port override, and both child-exit cleanup paths. Local
+unit tests alone do not establish that the container or updated browser suite passes.
+
 ### Machine enhancements, November 2, 2026
 
 The expanded `ssh.py` suite passes locally with original Herdr 0.9.5.

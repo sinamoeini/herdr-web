@@ -24,7 +24,7 @@ def run(fixture, alias, ports, starts):
                 page.locator('#machine').click()
                 port = page.get_by_label('Remote web port', exact=True)
                 host = page.get_by_label('SSH destination', exact=True)
-                expect(port).to_have_value('8004')
+                expect(port).to_have_value('8000')
                 host.fill(alias)
                 launched = starts.read_text() if starts.exists() else ''
                 for invalid in ['', '0', '65536', '-1', '1.5', 'abc', '1e3']:
@@ -60,7 +60,7 @@ def run(fixture, alias, ports, starts):
                     if index == 0:
                         assert pathlib.Path(f'/proc/{connections[1]["pid"]}').exists()
                 assert not errors, errors
-                results[name] = {'version': browser.version, 'default_port': 8004,
+                results[name] = {'version': browser.version, 'default_port': 8000,
                                  'invalid_ports_start_no_ssh_or_http_request': True,
                                  'two_remote_ports_through_visible_dialog': True,
                                  'exact_request_ports_and_connection_status': True,
