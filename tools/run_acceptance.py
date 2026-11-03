@@ -17,6 +17,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 SUITES = (
     "integration",
     "ui",
+    "terminal_selection",
     "graphics_browser",
     "view_edges",
     "services",

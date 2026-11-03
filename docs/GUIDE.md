@@ -79,6 +79,24 @@ Official panels provide spaces/tabs/pane controls, menus, agents, files/previews
 
 Selection/zoom use per-window session storage. Appearance, panel choices, layouts, and pins use local storage, never desktop configuration files. Ordinary selection does not send global Herdr focus operations; real objects and geometry remain shared. Fullscreen/browser windows replace native window management. Telemetry/feedback submission are disabled, updates are manual, and browser rasterization is not pixel-identical to native rendering.
 
+### Terminal text selection
+
+If a terminal program captures the mouse, hold Option on macOS and drag to select text.
+On Windows or Linux, hold Shift and drag.
+The program still receives ordinary mouse input.
+
+Herdr 0.9.5 also captures mouse input at shell prompts by default.
+For ordinary shell selection, give only the web process a separate Herdr configuration through `HERDR_CONFIG_PATH`.
+Set this value in that file:
+
+```toml
+[ui]
+mouse_capture = false
+```
+
+This setting leaves mouse input available to programs that request it.
+Keep the backend service on its existing configuration.
+
 ### Personal layouts and trusted panels
 
 The Layout editor copies, edits, saves, switches, downloads, or deletes personal layouts while leaving built-ins immutable. Invalid JSON/structure must preserve the last usable layout. Limits: 200 nodes, 20 levels, unique block IDs, exactly one `content.tab`, and a personal name of 1–64 letters/digits/underscores/hyphens. Main, terminals, and Herdr 98 assets are included; their remaining interactive verification is recorded in the ledger.
