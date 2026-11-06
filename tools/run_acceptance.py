@@ -18,6 +18,7 @@ SUITES = (
     "integration",
     "ui",
     "terminal_selection",
+    "terminal_scroll",
     "graphics_browser",
     "view_edges",
     "services",

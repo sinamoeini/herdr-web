@@ -97,6 +97,18 @@ mouse_capture = false
 This setting leaves mouse input available to programs that request it.
 Keep the backend service on its existing configuration.
 
+### Terminal scrolling
+
+Use the mouse wheel or trackpad to scroll terminal history.
+No prefix or copy mode is required.
+Scrolling works with `mouse_capture = false` and preserves ordinary text selection.
+Herdr controls the scroll distance through its existing mouse configuration.
+
+Page Up and Page Down also scroll shell history.
+On a Mac keyboard, use Fn + Up Arrow and Fn + Down Arrow.
+Programs such as Vim receive their normal wheel input.
+Full-screen programs without mouse capture receive the scroll input that Herdr selects for them.
+
 ### Personal layouts and trusted panels
 
 The Layout editor copies, edits, saves, switches, downloads, or deletes personal layouts while leaving built-ins immutable. Invalid JSON/structure must preserve the last usable layout. Limits: 200 nodes, 20 levels, unique block IDs, exactly one `content.tab`, and a personal name of 1–64 letters/digits/underscores/hyphens. Main, terminals, and Herdr 98 assets are included; their remaining interactive verification is recorded in the ledger.
