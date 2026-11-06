@@ -50,7 +50,7 @@ jobs:
         run: python3 test/browser_evidence_native.py
       - name: Build manifest executable
         run: ./build.sh
-      - name: Run all 12 native acceptance suites
+      - name: Run all native acceptance suites
         run: python3 tools/run_acceptance.py
       - name: Retain logs, screenshots, and per-suite outcomes
         if: always()

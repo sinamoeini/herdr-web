@@ -3,6 +3,7 @@ import { pointer, forwardPopupContext } from "./desktop/runtime/gpui.js";
 import { validateLayout } from "./desktop/runtime/layouts.js";
 import { ImageScenes } from "./native-images.js";
 import { SplitRatioWriter } from "./split-ratio.js";
+import { TerminalWheel } from "./terminal-wheel.js";
 
 const { model,request,run,theme,settings }=desktop;
 const application=document.getElementById("app"), overlayRoot=document.getElementById("overlays"), notifications=document.getElementById("notifications");
@@ -94,7 +95,9 @@ class PaneTerminal{
     await document.fonts.load(`${settings().font_size||14}px "${settings().font||"JetBrains Mono"}"`);await document.fonts.ready;if(this.disposed)return;
     this.terminal=new globalThis.Terminal({fontFamily:`"${settings().font||"JetBrains Mono"}","JetBrains Mono","Symbols Nerd Font",monospace`,fontSize:settings().font_size||14,allowProposedApi:false,scrollback:5000,convertEol:false,cursorBlink:true,macOptionClickForcesSelection:true,theme:terminalTheme()});
     this.fitAddon=new globalThis.FitAddon.FitAddon();this.terminal.loadAddon(this.fitAddon);this.terminal.open(this.host);this.viewport.append(this.canvas);this.images=new ImageScenes(this.canvas,error=>notice(`Graphics: ${error.message}`));
-    this.terminal.onData(data=>{if(this.ready&&this.socket?.readyState===WebSocket.OPEN)this.socket.send(JSON.stringify({type:"input",data}));});
+    this.terminal.onData(data=>this.input(data));
+    this.wheel=new TerminalWheel(this.terminal,()=>this.ready&&!this.disposed,data=>this.input(data));
+    this.terminal.attachCustomWheelEventHandler(event=>this.wheel.handle(event));
     this.terminal.attachCustomKeyEventHandler(event=>{if(desktop.reservedKey(event))return false;if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="v")return false;if(event.ctrlKey&&event.shiftKey&&["p","c"].includes(event.key.toLowerCase()))return false;const dialog=[...document.querySelectorAll(".web-dialog")].at(-1);return !dialog||dialog.contains(this.element);});
     this.fit();this.connect();this.connectGraphics();
   }
@@ -106,7 +109,8 @@ class PaneTerminal{
     socket.onclose=event=>{if(this.disposed||generation!==this.generation)return;this.inputReady(false);this.showError(event.reason||"Attachment disconnected. Retrying…");if(event.code!==1000)this.retry=setTimeout(()=>this.connect(),1500);};
     socket.onerror=()=>this.showError("Terminal connection failed; retrying without taking over another client.");
   }
-  inputReady(value){this.ready=value;this.element.dataset.ready=String(value);if(this.terminal)this.terminal.options.disableStdin=!value;if(value&&this.wantsFocus)this.focus();}
+  input(data){if(!this.disposed&&this.ready&&this.socket?.readyState===WebSocket.OPEN)this.socket.send(JSON.stringify({type:"input",data}));}
+  inputReady(value){this.ready=value;if(!value)this.wheel?.reset();this.element.dataset.ready=String(value);if(this.terminal)this.terminal.options.disableStdin=!value;if(value&&this.wantsFocus)this.focus();}
   focus(){if(!this.preview&&model.selected.pane!==this.pane.pane){this.wantsFocus=false;return;}this.wantsFocus=true;if(!this.ready||!this.terminal||this.disposed)return;this.wantsFocus=false;const overlay=[...document.querySelectorAll(".web-dialog,.web-popup")].at(-1);if(document.querySelector("dialog[open]")||(overlay&&!overlay.contains(this.element)))return;this.terminal.focus();}
   showError(text){this.error.hidden=false;this.error.replaceChildren(document.createTextNode(text+" "));const retry=document.createElement("button");retry.textContent="Retry";retry.onclick=()=>{clearTimeout(this.retry);this.connect();};this.error.append(retry);}
   appearance(pane){const appearance=model.paneAppearance,edge=(pane.focused?appearance.focus:appearance.border)||{};this.element.style.borderColor=tint(edge.color||(pane.focused?theme().accent:theme().border));this.element.style.borderWidth=`${edge.width??1}px`;this.viewport.style.padding=padding(model.layout.terminal_padding||[6,8]);this.header.style.order=appearance.header?.position==="bottom"?"2":"0";this.element.dataset.reveal=appearance.header?.reveal||"always";if(!this.terminal)return;this.terminal.options.theme=terminalTheme();const font=settings().font||"JetBrains Mono",size=settings().font_size||14,key=`${font}:${size}`;if(this.fontKey!==key){this.fontKey=key;document.fonts.load(`${size}px "${font}"`).then(()=>{if(!this.disposed&&this.fontKey===key){this.terminal.options.fontFamily=`"${font}","JetBrains Mono","Symbols Nerd Font",monospace`;this.terminal.options.fontSize=size;this.fit();}});}else this.fit();}

@@ -2,6 +2,24 @@
 
 **Implemented, with scoped acceptance and explicit remaining limitations.** This document summarizes recorded test results, not the status of any personal deployment. Successful suites do not establish every interaction in the implementation contract. No core requirement is reclassified outside scope merely because it lacks evidence.
 
+## Terminal wheel scrolling, November 6, 2026
+
+`terminal_scroll.py` passes with original Herdr 0.9.5 in Chromium 153.0.8010.12
+and Firefox 157.0 on Linux. Each browser passes the Linux and emulated macOS
+platform cases. The same Firefox regression test fails against the previous
+selection build because wheel input leaves the backend scroll offset at zero.
+
+The tests use real terminal attachments and browser wheel events. They cover
+visible history, Page Up/Down interaction, small pixel deltas, ordinary selection,
+application mouse reports, and alternate-screen arrow routing. Separate DOM
+events cover line and page delta modes. Modifier and horizontal gestures send
+no terminal input. These results do not establish physical Mac or trackpad behavior.
+
+The existing `terminal_selection.py` suite also passes all four browser/platform
+cases. The release build passes. Python discovery reports 46 passing tests and
+15 platform-specific skips. The new suite runs in the standard acceptance job,
+which now contains 14 suites. Full acceptance remains a CI gate.
+
 ## Desktop asset upgrade — November 1, 2026
 
 Browser panels/assets now use Herdr app **v0.1.11**, commit
