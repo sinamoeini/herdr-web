@@ -19,6 +19,23 @@ Official desktop panels + browser DOM adapter
 
 Herdr owns shells, processes, workspaces/spaces, tabs, terminal IDs, and geometry. Web connections are temporary attachments. Closing a browser or stopping the web executable does not intentionally close Herdr's terminals. Text/input use CLI attachments; decoded images use separate native connections to the same selected server.
 
+Browsers connected to the same web server share one CLI attachment per terminal.
+Each browser can type into that terminal.
+The shared grid uses the smallest requested column count and row count.
+Larger views show unused space, and the grid expands when a smaller view disconnects.
+The terminal screen and backend history position are shared. Browser text selections remain local.
+
+A Rust terminal parser retains the current screen without retaining additional scrollback.
+A new browser receives that screen, followed by live updates and a fresh Herdr redraw.
+The redraw restores details such as embedded hyperlink targets.
+Closing the last browser releases the attachment and leaves the shell running.
+A slow browser loses its own connection without stopping other viewers.
+
+Separate web-server processes still compete for the backend attachment.
+Herdr Web never uses `--takeover`.
+Busy and slow-connection errors wait for the Retry button instead of repeating automatically.
+Browser connections retry after a web-server restart or a transport failure.
+
 Browser selection is window-local and sends no public focus mutations. Herdr 0.9.5's native graphics connection can nevertheless update backend *default* focus fields while selecting its tab. Independent browser views do not follow those fields once selected; strict preservation of the backend default focus is an upstream limitation. Web restarts preserve terminals; a host reboot does not preserve shell processes or variables.
 
 ## Build and standalone operation
@@ -126,7 +143,7 @@ Add a layout block with `"content":{"mod":"notes"}`, retaining its single termin
 
 ### Parking, agents, and managed workers
 
-Park/Keep moves the real pane while preserving terminal/process identity; Kill requires confirmation. Reserved workspace `__herdr_web_parked__` is hidden from ordinary browser spaces but remains visible in native clients. Preview uses a real attachment without takeover; another owner can make it busy. Installed supported agents are discovered but never launched automatically.
+Park/Keep moves the real pane while preserving terminal/process identity; Kill requires confirmation. Reserved workspace `__herdr_web_parked__` is hidden from ordinary browser spaces but remains visible in native clients. Preview shares an existing attachment on the same web server. Another program can still make the terminal busy. Installed supported agents are discovered but never launched automatically.
 
 A managed worker is a separate Herdr terminal linked by backend metadata, not an arbitrary subprocess. Obtain the **real parent terminal ID** from `/api/state`'s snapshot, not a pane ID, then intentionally create it:
 
@@ -197,6 +214,7 @@ HERDR_BIN="$(command -v herdr)" "$PYTHON" test/ui.py
 HERDR_BIN="$(command -v herdr)" "$PYTHON" test/services.py
 HERDR_BIN="$(command -v herdr)" "$PYTHON" test/security.py
 HERDR_BIN="$(command -v herdr)" "$PYTHON" test/resources.py
+HERDR_BIN="$(command -v herdr)" "$PYTHON" test/shared_terminal.py
 HERDR_BIN="$(command -v herdr)" "$PYTHON" test/plugin.py
 HERDR_BIN="$(command -v herdr)" "$PYTHON" test/graphics_browser.py
 HERDR_BIN="$(command -v herdr)" "$PYTHON" test/git_failures.py

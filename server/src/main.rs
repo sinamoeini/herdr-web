@@ -10,6 +10,7 @@ mod live;
 mod machines;
 mod plugin;
 mod terminal_probe;
+mod terminal_sync;
 mod validation;
 mod watch;
 
@@ -34,7 +35,7 @@ fn listener_address(port: u16, bind: Option<&str>) -> Result<std::net::SocketAdd
 struct Services {
     backend: Option<Arc<backend::Backend>>,
     shutdown: tokio::sync::watch::Receiver<bool>,
-    attachments: Arc<tokio::sync::Semaphore>,
+    attachments: Arc<live::Attachments>,
     subscriptions: Arc<tokio::sync::Semaphore>,
     machines:machines::Machines,
     mods: extras::Mods,
@@ -59,9 +60,10 @@ async fn state(State(services): State<Arc<Services>>, Query(query): Query<std::c
 
 async fn terminal(State(services): State<Arc<Services>>, Path(pane): Path<String>, upgrade: WebSocketUpgrade) -> Result<Response> {
     let backend = selected(&services)?;
-    backend.pane(&pane).await?;
-    let permit = services.attachments.clone().try_acquire_owned().map_err(|_| Error::unavailable(format!("{} terminal attachments are already active", live::ATTACHMENT_LIMIT)))?;
-    Ok(upgrade.max_message_size(live::MESSAGE_LIMIT).on_upgrade(move |socket| live::attach(socket, backend, pane, permit, services.shutdown.clone())))
+    let pane = backend.pane(&pane).await?;
+    let terminal = pane["terminal_id"].as_str().ok_or_else(|| Error::backend("pane has no terminal ID"))?.to_owned();
+    let subscription = services.attachments.subscribe(backend, terminal, services.shutdown.clone()).await?;
+    Ok(upgrade.max_message_size(live::MESSAGE_LIMIT).on_upgrade(move |socket| live::attach(socket, subscription, services.shutdown.clone())))
 }
 
 async fn events(State(services): State<Arc<Services>>, upgrade: WebSocketUpgrade) -> Result<Response> {
@@ -240,7 +242,7 @@ async fn run() -> Result<()> {
     let services = Arc::new(Services {
         backend, shutdown: receiver.clone(),
         machines:machines::Machines::new(receiver.clone()),
-        attachments: Arc::new(tokio::sync::Semaphore::new(live::ATTACHMENT_LIMIT)),
+        attachments: live::Attachments::new(),
         subscriptions:subscriptions.clone(),
         mods: extras::Mods::discover(mods.as_deref())?,
         uploads: extras::Uploads::create()?,
@@ -259,7 +261,7 @@ async fn run() -> Result<()> {
     graceful.await?;
     services.machines.stop().await;
     services.git.drain().await?;
-    let _=tokio::time::timeout(std::time::Duration::from_secs(5),services.attachments.acquire_many(live::ATTACHMENT_LIMIT as u32)).await;
+    services.attachments.drain().await;
     let _=tokio::time::timeout(std::time::Duration::from_secs(5),services.subscriptions.acquire_many(64)).await;
     drop(plugin);
     Ok(())

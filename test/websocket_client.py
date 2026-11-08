@@ -10,9 +10,13 @@ import urllib.parse
 class WebSocket:
     def __init__(self, url, path, receive_buffer=None, origin=True):
         parsed=urllib.parse.urlsplit(url)
-        self.socket=socket.create_connection((parsed.hostname,parsed.port),timeout=5)
         if receive_buffer:
+            self.socket=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+            self.socket.settimeout(5)
             self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,receive_buffer)
+            self.socket.connect((parsed.hostname,parsed.port))
+        else:
+            self.socket=socket.create_connection((parsed.hostname,parsed.port),timeout=5)
         key=base64.b64encode(os.urandom(16)).decode()
         headers=[f'GET {path} HTTP/1.1',f'Host: {parsed.netloc}','Upgrade: websocket','Connection: Upgrade',f'Sec-WebSocket-Key: {key}','Sec-WebSocket-Version: 13']
         if origin:headers.append(f'Origin: {url}')

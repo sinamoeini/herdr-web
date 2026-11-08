@@ -1,24 +1,22 @@
-use std::{fs::File, os::fd::{FromRawFd, RawFd}};
-use crate::error::Result;
+use std::{collections::HashMap, fs::File, io::{Read, Write}, os::fd::{FromRawFd, RawFd},
+    sync::{Arc, atomic::{AtomicBool, AtomicUsize, Ordering}, mpsc as blocking}, time::{Duration, Instant}};
+use axum::{body::Bytes, extract::ws::{WebSocket, Message, CloseFrame}};
+use tokio::sync::{mpsc, watch, Mutex, OwnedSemaphorePermit, Semaphore};
+use portable_pty::{CommandBuilder, PtySize, native_pty_system};
+use crate::{backend::Backend, error::{Error, Result}, terminal_probe::{AttachmentReadiness, CapabilityFilter, REPLY}, terminal_sync::Screen};
 
 pub const ATTACHMENT_LIMIT: usize = 32;
+pub const VIEWER_LIMIT: usize = 128;
 pub const INPUT_QUEUE: usize = 8;
 pub const OUTPUT_QUEUE: usize = 32;
+pub const OUTPUT_BUDGET: usize = 16 * 1024 * 1024;
 pub const INPUT_LIMIT: usize = 65_536;
 pub const MESSAGE_LIMIT: usize = 1024 * 1024;
-
-use std::{io::{Read, Write}, sync::{Arc, atomic::{AtomicBool, Ordering}, mpsc as blocking}, time::{Duration, Instant}};
-use axum::extract::ws::{WebSocket, Message, CloseFrame};
-use tokio::sync::{mpsc, OwnedSemaphorePermit, watch};
-use portable_pty::{CommandBuilder, PtySize, native_pty_system};
-use crate::{backend::Backend, error::Error, terminal_probe::{AttachmentReadiness, CapabilityFilter, REPLY}};
 
 struct Attachment {
     child: Box<dyn portable_pty::Child + Send + Sync>,
     stopped: Arc<AtomicBool>,
-    _permit: OwnedSemaphorePermit,
 }
-
 impl Drop for Attachment {
     fn drop(&mut self) {
         self.stopped.store(true, Ordering::Release);
@@ -27,7 +25,97 @@ impl Drop for Attachment {
     }
 }
 
-enum Output { Ready, Bytes(Vec<u8>), Error(String) }
+enum Output { Ready, Bytes(Bytes), Size(u16, u16), Error(String) }
+
+pub struct Attachments {
+    entries: Mutex<HashMap<String, Arc<Shared>>>,
+    slots: Arc<Semaphore>,
+    viewers: Arc<Semaphore>,
+}
+struct Shared {
+    input: mpsc::Sender<Command>,
+    closing: AtomicBool,
+    done: watch::Receiver<bool>,
+}
+enum Command { Join(Viewer), Input(Arc<AtomicBool>, Input) }
+struct Viewer {
+    alive: Arc<AtomicBool>,
+    output: mpsc::Sender<Output>,
+    ended: watch::Sender<Option<String>>,
+    size: Option<(u16, u16)>,
+    ready: bool,
+    joined: Instant,
+    queued: Arc<AtomicUsize>,
+}
+impl Viewer {
+    fn end(&self, message: &str) {
+        self.alive.store(false, Ordering::Release);
+        self.ended.send_replace(Some(message.to_owned()));
+    }
+    fn send(&self, output: Output) -> bool {
+        let bytes = match &output { Output::Bytes(bytes) => bytes.len(), _ => 0 };
+        if self.queued.try_update(Ordering::AcqRel, Ordering::Acquire, |size| size.checked_add(bytes).filter(|size| *size <= OUTPUT_BUDGET)).is_err() {
+            self.end("This browser cannot keep up with terminal output. Click Retry to reconnect.");
+            return false;
+        }
+        if self.output.try_send(output).is_ok() { true } else {
+            self.queued.fetch_sub(bytes, Ordering::AcqRel);
+            self.end("This browser cannot keep up with terminal output. Click Retry to reconnect.");
+            false
+        }
+    }
+}
+pub struct Subscription {
+    shared: Arc<Shared>,
+    alive: Arc<AtomicBool>,
+    output: mpsc::Receiver<Output>,
+    ended: watch::Receiver<Option<String>>,
+    queued: Arc<AtomicUsize>,
+    _permit: OwnedSemaphorePermit,
+}
+impl Drop for Subscription {
+    fn drop(&mut self) { self.alive.store(false, Ordering::Release); }
+}
+impl Attachments {
+    pub fn new() -> Arc<Self> {
+        Arc::new(Self { entries: Mutex::new(HashMap::new()), slots: Arc::new(Semaphore::new(ATTACHMENT_LIMIT)), viewers: Arc::new(Semaphore::new(VIEWER_LIMIT)) })
+    }
+    pub async fn subscribe(self: &Arc<Self>, backend: Arc<Backend>, terminal: String, shutdown: watch::Receiver<bool>) -> Result<Subscription> {
+        let permit = self.viewers.clone().try_acquire_owned().map_err(|_| Error::unavailable("128 terminal browser connections are already active"))?;
+        loop {
+            let mut entries = self.entries.lock().await;
+            let shared = if let Some(shared) = entries.get(&terminal) {
+                if shared.closing.load(Ordering::Acquire) {
+                    let mut done = shared.done.clone();
+                    drop(entries);
+                    tokio::time::timeout(Duration::from_secs(5), done.wait_for(|done| *done)).await
+                        .map_err(|_| Error::unavailable("Previous terminal attachment is still stopping"))?
+                        .map_err(|_| Error::unavailable("Terminal attachment stopped unexpectedly"))?;
+                    continue;
+                }
+                shared.clone()
+            } else {
+                let slot = self.slots.clone().try_acquire_owned().map_err(|_| Error::unavailable("32 terminal attachments are already active"))?;
+                let (input, commands) = mpsc::channel(32);
+                let (done, completed) = watch::channel(false);
+                let shared = Arc::new(Shared { input, closing: AtomicBool::new(false), done: completed });
+                entries.insert(terminal.clone(), shared.clone());
+                tokio::spawn(run_shared(self.clone(), shared.clone(), backend.clone(), terminal.clone(), commands, done, slot, shutdown.clone()));
+                shared
+            };
+            let (output, received) = mpsc::channel(OUTPUT_QUEUE);
+            let (ended, ending) = watch::channel(None);
+            let alive = Arc::new(AtomicBool::new(true));
+            let queued = Arc::new(AtomicUsize::new(0));
+            let viewer = Viewer { alive: alive.clone(), output, ended, size: None, ready: false, joined: Instant::now(), queued: queued.clone() };
+            shared.input.try_send(Command::Join(viewer)).map_err(|_| Error::unavailable("Terminal connection queue is busy"))?;
+            return Ok(Subscription { shared, alive, output: received, ended: ending, queued, _permit: permit });
+        }
+    }
+    pub async fn drain(&self) {
+        let _ = tokio::time::timeout(Duration::from_secs(5), self.slots.acquire_many(ATTACHMENT_LIMIT as u32)).await;
+    }
+}
 
 fn enqueue<T>(sender: &blocking::SyncSender<T>, mut value: T, stopped: &AtomicBool) -> std::result::Result<(), String> {
     let deadline = Instant::now() + Duration::from_secs(5);
@@ -55,11 +143,15 @@ fn emit(sender: &mpsc::Sender<Output>, mut value: Output, stopped: &AtomicBool) 
     }
 }
 
-pub async fn attach(mut socket: WebSocket, backend: Arc<Backend>, pane: String, permit: OwnedSemaphorePermit, mut shutdown: watch::Receiver<bool>) {
-    let result = async {
-        let pane = backend.pane(&pane).await?;
-        let terminal = pane["terminal_id"].as_str().ok_or_else(|| Error::backend("pane has no terminal ID"))?.to_owned();
-        let setup = tokio::task::spawn_blocking(move || -> Result<_> {
+struct Pty {
+    owner: Attachment,
+    input: blocking::SyncSender<Input>,
+    output: mpsc::Receiver<Output>,
+    reader: tokio::task::JoinHandle<()>,
+    writer: tokio::task::JoinHandle<()>,
+}
+async fn start_pty(backend: Arc<Backend>, terminal: String) -> Result<Pty> {
+    let (owner, master, mut reader, mut writer) = tokio::task::spawn_blocking(move || -> Result<_> {
             let pair = native_pty_system().openpty(PtySize { rows:24, cols:80, pixel_width:0, pixel_height:0 }).map_err(|error| Error::backend(error.to_string()))?;
             let mut command = CommandBuilder::new(&backend.binary);
             command.args(["terminal", "attach", &terminal]);
@@ -77,12 +169,14 @@ pub async fn attach(mut socket: WebSocket, backend: Arc<Backend>, pane: String, 
             let child = pair.slave.spawn_command(command).map_err(|error| Error::backend(error.to_string()))?;
             drop(pair.slave);
             let stopped = Arc::new(AtomicBool::new(false));
-            Ok((Attachment { child, stopped, _permit:permit }, pair.master, reader, writer))
-        }).await.map_err(|_| Error::backend("attachment setup failed"))??;
-        let (owner, master, mut reader, mut writer) = setup;
+            Ok((Attachment { child, stopped }, pair.master, reader, writer))
+
+    }).await.map_err(|_| Error::backend("attachment setup failed"))??;
+    let pid = owner.child.process_id().ok_or_else(|| Error::backend("attachment has no process ID"))?;
+
         let stopped = owner.stopped.clone();
         let (input, receiver) = blocking::sync_channel(INPUT_QUEUE);
-        let (output, mut received) = mpsc::channel(OUTPUT_QUEUE);
+        let (output, received) = mpsc::channel(OUTPUT_QUEUE);
         let writer_stop = stopped.clone();
         let writer_output = output.clone();
         let writer_task = tokio::task::spawn_blocking(move || {
@@ -90,6 +184,10 @@ pub async fn attach(mut socket: WebSocket, backend: Arc<Backend>, pane: String, 
                 let value = match receiver.recv_timeout(Duration::from_millis(100)) { Ok(value) => value, Err(blocking::RecvTimeoutError::Timeout) => continue, Err(_) => break };
                 let result = match value {
                     Input::Resize { cols, rows } => master.resize(PtySize { cols, rows, pixel_width:0, pixel_height:0 }).map_err(|error| error.to_string()),
+                    Input::Redraw => {
+                        if unsafe { libc::kill(pid as i32, libc::SIGWINCH) } == 0 { Ok(()) }
+                        else { Err(std::io::Error::last_os_error().to_string()) }
+                    }
                     Input::Text(text) => {
                         let mut bytes = text.as_bytes();
                         let deadline = Instant::now() + Duration::from_secs(5);
@@ -126,7 +224,7 @@ pub async fn attach(mut socket: WebSocket, backend: Arc<Backend>, pane: String, 
                             if enqueue(&probe_writer, Input::Text(String::from_utf8(REPLY.to_vec()).unwrap()), &reader_stop).is_err() { break; }
                         }
                         let ready = readiness.push(&bytes);
-                        if !bytes.is_empty() && !emit(&output, Output::Bytes(bytes), &reader_stop) { break; }
+                        if !bytes.is_empty() && !emit(&output, Output::Bytes(bytes.into()), &reader_stop) { break; }
                         if ready && !emit(&output, Output::Ready, &reader_stop) { break; }
                     }
                     Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => std::thread::sleep(Duration::from_millis(2)),
@@ -134,48 +232,161 @@ pub async fn attach(mut socket: WebSocket, backend: Arc<Backend>, pane: String, 
                 }
             }
             let pending = filter.finish();
-            if !pending.is_empty() { emit(&output, Output::Bytes(pending), &reader_stop); }
+            if !pending.is_empty() { emit(&output, Output::Bytes(pending.into()), &reader_stop); }
             emit(&output, Output::Error("Attachment ended; the terminal may be busy in another client. Retry without takeover.".into()), &reader_stop);
         });
-        let mut stall_check = tokio::time::interval(Duration::from_millis(250));
-        let ending = loop {
-            tokio::select! {
-                _ = async { let _ = shutdown.wait_for(|value| *value).await; } => break "Web server is stopping".to_owned(),
-                _ = stall_check.tick() => if stopped.load(Ordering::Acquire) { break "Terminal output stalled for five seconds".to_owned(); },
-                output = received.recv() => {
-                    let message = match output {
-                        Some(Output::Ready) => Message::Text("{\"ready\":true}".into()),
-                        Some(Output::Bytes(bytes)) => Message::Binary(bytes.into()),
+
+    Ok(Pty { owner, input, output: received, reader: reader_task, writer: writer_task })
+}
+
+// Each terminal has one actor and one CLI child. Browser queues never block the
+// actor or a peer. Keep the registry entry until the old child has been reaped.
+async fn run_shared(registry: Arc<Attachments>, shared: Arc<Shared>, backend: Arc<Backend>, terminal: String,
+    mut commands: mpsc::Receiver<Command>, done: watch::Sender<bool>, _slot: OwnedSemaphorePermit, mut shutdown: watch::Receiver<bool>) {
+    let mut viewers = Vec::<Viewer>::new();
+    let result = start_pty(backend, terminal.clone()).await;
+    let ending = match result {
+        Err(error) => error.1,
+        Ok(mut pty) => {
+            let mut size = (80, 24);
+            let mut screen = Screen::new();
+            let mut redraw = false;
+            let mut tick = tokio::time::interval(Duration::from_millis(100));
+            let ending = loop {
+                tokio::select! {
+                    _ = async { let _ = shutdown.wait_for(|value| *value).await; } => break "Web server is stopping".to_owned(),
+                    command = commands.recv() => match command {
+                        Some(Command::Join(mut viewer)) => {
+                            viewer.send(Output::Size(size.0, size.1));
+                            if screen.ready && viewer.send(Output::Bytes(screen.snapshot().into())) { viewer.ready = viewer.send(Output::Ready); }
+                            viewers.push(viewer);
+                            // Herdr repaints on SIGWINCH even when its size is
+                            // unchanged. Restore renderer details, such as OSC 8
+                            // targets, that the bounded text snapshot omits.
+                            redraw = true;
+                        }
+                        Some(Command::Input(alive, input)) => {
+                            if let Some(viewer) = viewers.iter_mut().find(|viewer| Arc::ptr_eq(&viewer.alive, &alive) && viewer.alive.load(Ordering::Acquire)) {
+                                match input {
+                                    Input::Resize { cols, rows } => viewer.size = Some((cols, rows)),
+                                    Input::Text(_) if viewer.ready => {
+                                        if pty.input.try_send(input).is_err() { viewer.end("Terminal input queue is busy. Click Retry to reconnect."); }
+                                    }
+                                    _ => (),
+                                }
+                            }
+                        }
+                        None => break "Browser connections ended".to_owned(),
+                    },
+                    output = pty.output.recv() => match output {
+                        Some(Output::Ready) => (),
+                        Some(Output::Bytes(bytes)) => {
+                            let bytes = match screen.push(&bytes) {
+                                Ok(Some(complete)) => Bytes::from(complete),
+                                Ok(None) => continue,
+                                Err(error) => break error.to_owned(),
+                            };
+                            for viewer in &mut viewers {
+                                if !viewer.alive.load(Ordering::Acquire) { continue; }
+                                if viewer.ready { viewer.send(Output::Bytes(bytes.clone())); }
+                                else if screen.ready && viewer.send(Output::Bytes(bytes.clone())) { viewer.ready = viewer.send(Output::Ready); }
+                            }
+                        }
                         Some(Output::Error(error)) => break error,
                         None => break "Terminal output ended".to_owned(),
-                    };
-                    match tokio::time::timeout(Duration::from_secs(5), socket.send(message)).await {
-                        Ok(Ok(())) => (), _ => break "Browser output stalled or closed".to_owned(),
+                        _ => (),
+                    },
+                    _ = tick.tick() => {
+                        if pty.owner.stopped.load(Ordering::Acquire) { break "Terminal output stalled for five seconds".to_owned(); }
+                        for viewer in &viewers {
+                            if !viewer.ready && viewer.joined.elapsed() > Duration::from_secs(10) { viewer.end("Terminal did not produce a complete screen. Click Retry to reconnect."); }
+                        }
+                    },
+                }
+                viewers.retain(|viewer| viewer.alive.load(Ordering::Acquire));
+                if viewers.is_empty() {
+                    // A join is enqueued under this same lock, so it cannot be
+                    // stranded between the empty check and retirement.
+                    let _entries = registry.entries.lock().await;
+                    if commands.is_empty() {
+                        shared.closing.store(true, Ordering::Release);
+                        break "Browser disconnected".to_owned();
                     }
                 }
-                message = socket.recv() => {
-                    match message {
-                        Some(Ok(Message::Text(text))) => {
-                            let value = serde_json::from_str(&text).map_err(|_| Error::bad("invalid terminal JSON"))?;
-                            let value = validate_input(&value)?;
-                            let sender = input.clone(); let cancelled = stopped.clone();
-                            tokio::task::spawn_blocking(move || enqueue(&sender, value, &cancelled)).await.map_err(|_| Error::backend("terminal input task ended"))?.map_err(Error::backend)?;
+                let sizes: Vec<_> = viewers.iter().filter_map(|viewer| viewer.size).collect();
+                if let (Some(cols), Some(rows)) = (sizes.iter().map(|s| s.0).min(), sizes.iter().map(|s| s.1).min()) {
+                    if (cols, rows) != size {
+                        if pty.input.try_send(Input::Resize { cols, rows }).is_ok() {
+                            size = (cols, rows);
+                            screen.resize(cols, rows);
+                            for viewer in &viewers { viewer.send(Output::Size(cols, rows)); }
                         }
-                        Some(Ok(Message::Ping(bytes))) => { let _ = tokio::time::timeout(Duration::from_secs(5), socket.send(Message::Pong(bytes))).await; }
-                        Some(Ok(Message::Pong(_))) => (),
-                        _ => break "Browser disconnected".to_owned(),
                     }
+                }
+                if redraw && screen.ready && pty.input.try_send(Input::Redraw).is_ok() { redraw = false; }
+            };
+            shared.closing.store(true, Ordering::Release);
+            for viewer in &viewers { viewer.end(&ending); }
+            pty.owner.stopped.store(true, Ordering::Release);
+            drop(pty.input);
+            let _ = tokio::task::spawn_blocking(move || drop(pty.owner)).await;
+            let _ = tokio::time::timeout(Duration::from_secs(2), async { let _ = pty.reader.await; let _ = pty.writer.await; }).await;
+            ending
+        }
+    };
+    shared.closing.store(true, Ordering::Release);
+    commands.close();
+    while let Some(command) = commands.recv().await {
+        if let Command::Join(viewer) = command { viewer.end(&ending); }
+    }
+    drop(_slot);
+    registry.entries.lock().await.remove(&terminal);
+    done.send_replace(true);
+}
+
+pub async fn attach(mut socket: WebSocket, mut subscription: Subscription, mut shutdown: watch::Receiver<bool>) {
+    let result: Result<()> = async {
+        loop {
+            tokio::select! {
+                _ = async { let _ = shutdown.wait_for(|value| *value).await; } => return Err(Error::backend("Web server is stopping")),
+                ending = subscription.ended.changed() => {
+                    let message = subscription.ended.borrow().clone().unwrap_or_else(|| "Terminal attachment ended".to_owned());
+                    let _ = ending;
+                    return Err(Error::backend(message));
+                }
+                output = subscription.output.recv() => {
+                    let message = match output {
+                        Some(Output::Ready) => Message::Text("{\"ready\":true}".into()),
+                        Some(Output::Size(cols, rows)) => Message::Text(serde_json::json!({"size":{"cols":cols,"rows":rows}}).to_string().into()),
+                        Some(Output::Bytes(bytes)) => {
+                            subscription.queued.fetch_sub(bytes.len(), Ordering::AcqRel);
+                            Message::Binary(bytes)
+                        }
+                        _ => return Err(Error::backend("Terminal output ended")),
+                    };
+                    tokio::time::timeout(Duration::from_secs(5), socket.send(message)).await
+                        .map_err(|_| Error::backend("Browser output stalled for five seconds"))?
+                        .map_err(|_| Error::backend("Browser disconnected"))?;
+                }
+                message = socket.recv() => match message {
+                    Some(Ok(Message::Text(text))) => {
+                        let value = validate_input(&serde_json::from_str(&text).map_err(|_| Error::bad("invalid terminal JSON"))?)?;
+                        subscription.shared.input.try_send(Command::Input(subscription.alive.clone(), value))
+                            .map_err(|_| Error::unavailable("Terminal input queue is busy"))?;
+                    }
+                    Some(Ok(Message::Ping(bytes))) => {
+                        let _ = tokio::time::timeout(Duration::from_secs(5), socket.send(Message::Pong(bytes))).await;
+                    }
+                    Some(Ok(Message::Pong(_))) => (),
+                    _ => return Ok(()),
                 }
             }
-        };
-        stopped.store(true, Ordering::Release);
-        drop(input);
-        tokio::task::spawn_blocking(move || drop(owner)).await.ok();
-        let _ = tokio::time::timeout(Duration::from_secs(2), async { let _ = reader_task.await; let _ = writer_task.await; }).await;
-        Err::<(), Error>(Error::backend(ending))
+        }
     }.await;
+    drop(subscription);
     if let Err(error) = result {
-        let _ = tokio::time::timeout(Duration::from_secs(1), socket.send(Message::Text(serde_json::json!({"error":error.1}).to_string().into()))).await;
+        let retry = error.1 == "Web server is stopping";
+        let _ = tokio::time::timeout(Duration::from_secs(1), socket.send(Message::Text(serde_json::json!({"error":error.1,"retry":retry}).to_string().into()))).await;
         let reason: String = error.1.chars().take(100).collect();
         let _ = tokio::time::timeout(Duration::from_secs(1), socket.send(Message::Close(Some(CloseFrame { code:1011, reason:reason.into() })))).await;
     }
@@ -188,6 +399,7 @@ pub fn duplicate_writer(master: RawFd) -> Result<File> {
 }
 
 pub enum Input {
+    Redraw,
     Text(String),
     Resize { cols: u16, rows: u16 },
 }
