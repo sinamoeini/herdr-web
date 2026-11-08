@@ -49,9 +49,9 @@ class AcceptanceRunnerTests(unittest.TestCase):
             self.assertEqual(acceptance.run_suites([("success", [sys.executable, "-c", "pass"])], output), 0)
 
     def test_inventory_includes_native_lifecycle_and_headed_permissions(self):
-        self.assertEqual(len(acceptance.SUITES), 14)
+        self.assertEqual(len(acceptance.SUITES), 15)
         self.assertEqual(len(set(acceptance.SUITES)), len(acceptance.SUITES))
-        self.assertTrue({"integration", "ui", "terminal_selection", "terminal_scroll", "graphics_browser", "view_edges", "plugin", "ssh", "permissions"}.issubset(acceptance.SUITES))
+        self.assertTrue({"integration", "ui", "terminal_selection", "terminal_scroll", "shared_terminal", "graphics_browser", "view_edges", "plugin", "ssh", "permissions"}.issubset(acceptance.SUITES))
         for name in acceptance.SUITES:
             self.assertTrue((ROOT / "test" / f"{name}.py").is_file())
         self.assertEqual(acceptance.command_for("permissions")[:3], ["xvfb-run", "-a", sys.executable])

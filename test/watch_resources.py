@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Linux long-poll cancellation, shared watch capacity, and descriptor cleanup."""
 
+import http.client
 import json
 import pathlib
+import select
 import socket
 import urllib.parse
 
@@ -36,7 +38,21 @@ def main():
             try:
                 for _ in range(64):
                     pending.append(watch())
-                wait_for(lambda: inotify_count() == baseline + 64)
+                def full_capacity():
+                    # Descriptor cleanup can precede permit release. Retry only
+                    # temporary capacity responses; a leaked permit still fails
+                    # the requirement to reach all 64 watches within 15 seconds.
+                    for connection in select.select(pending, [], [], 0)[0]:
+                        response = http.client.HTTPResponse(connection)
+                        response.begin()
+                        payload = response.read()
+                        assert response.status == 503, (response.status, payload)
+                        assert json.loads(payload) == {'error': 'watch capacity reached'}, payload
+                        index = pending.index(connection)
+                        connection.close()
+                        pending[index] = watch()
+                    return inotify_count() == baseline + 64
+                wait_for(full_capacity)
                 assert fixture.http('/api/watch', {'path': str(directory)})[0] == 503
             finally:
                 for connection in pending:

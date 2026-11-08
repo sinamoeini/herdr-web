@@ -62,14 +62,44 @@ Strings cap at 512 UTF-8 bytes and reject NUL. `focus` is Boolean. Insertion ind
 
 ### `/terminal/PANE_ID`
 
-Resolves the pane to its terminal from a fresh snapshot and starts a temporary CLI attachment. The local capability exchange is answered immediately but does not advertise input readiness: it happens before backend ownership is accepted. Text `{"ready":true}` is sent only after forwarding the first complete terminal ANSI frame. With pinned Herdr 0.9.5, successful frames are bracketed by `CSI ? 2026 h/l`; a busy/rejected attachment emits no accepted frame and must never advertise readiness. Terminal output is **binary**; it is not JSON. Browser input is text JSON:
+The route resolves the pane from a fresh backend snapshot.
+Browsers on the same web server share one CLI attachment, keyed by terminal ID.
+The local capability exchange does not establish input readiness.
+The server sends `{"ready":true}` after the first complete Herdr render frame.
+A later browser receives a bounded screen snapshot before readiness and live output.
+The server also requests a full redraw from its owned CLI process.
+
+Terminal output uses binary messages. Browser input uses text JSON:
 
 ```json
 {"type":"input","data":"echo hello\r"}
 {"type":"resize","cols":80,"rows":24}
 ```
 
-Errors are text `{"error":"message"}` followed by closure with a reason. The browser retries abnormal/busy attachment closures without takeover. Limits: 32 attachments, 1 MiB WebSocket message, 65,536 input bytes, 1–500 columns, 1–200 rows, 8 input/32 output queue entries, 5-second stall. Disposing the attachment must not send newline/EOF or close the persistent terminal.
+Each browser can submit input after readiness.
+Input messages enter one ordered queue for the shared terminal.
+Resize messages state the space available in that browser.
+The terminal uses the minimum column count and minimum row count across viewers.
+The server sends `{"size":{"cols":80,"rows":24}}` when the shared grid changes.
+Every browser renders that same grid, including when another browser changes its size.
+
+Errors use `{"error":"message","retry":false}`, followed by closure.
+Busy attachments and slow browsers require an explicit Retry.
+Web-server shutdown uses `"retry":true` to permit automatic reconnection.
+Separate web servers still compete for backend ownership. This route never requests takeover.
+
+Limits are 32 shared attachments and 128 browser connections.
+Existing attachments accept additional viewers when all 32 attachment slots are occupied.
+Messages from browsers allow at most 1 MiB, with 65,536 bytes per input message.
+Dimensions allow 1–500 columns and 1–200 rows.
+Each attachment has eight queued PTY input messages and 32 queued PTY output chunks.
+Each browser has at most 32 output messages and 16 MiB of queued output, plus one message in transit.
+Incomplete render frames allow at most 8 MiB. Snapshots retain no additional scrollback.
+Output writes time out after five seconds. Initial screen readiness times out after ten seconds.
+
+A stalled browser disconnects independently. Other viewers keep their attachment.
+Closing the last browser reaps only the owned CLI attachment, after which a new attachment can start.
+Attachment cleanup must not send newline or EOF to the persistent shell.
 
 ### `/api/events`
 

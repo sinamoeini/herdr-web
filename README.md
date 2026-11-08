@@ -97,6 +97,7 @@ with rollback copies, without starting or stopping services.
 ## Features
 
 - Persistent terminals, tabs, spaces, splits, and independent browser views.
+- Multiple browsers share one attachment per terminal, with a current-screen snapshot on connection.
 - Desktop panels, file previews, Git changes/worktrees, themes, and layouts.
 - Kitty graphics, image paste/drop, parking, agents, and managed workers.
 - Native Start, Stop, Restart, and Status actions with owned-resource cleanup.

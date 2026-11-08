@@ -1,5 +1,41 @@
 # Acceptance ledger — October 31, 2026
 
+## Shared terminal attachments, November 8, 2026
+
+The browser now shares one Herdr CLI attachment per terminal within one web server.
+The new `shared_terminal.py` suite uses original Herdr 0.9.5 and independent browser contexts.
+It covers simultaneous connections, screen snapshots, colors, Unicode, shared input, and viewport changes.
+It also covers alternate-screen mouse modes, rapid reconnects, peer disconnects, and invalid input from a sibling connection.
+
+The external-owner case uses a second web-server process.
+It requires one stable busy error, no takeover, and a successful explicit Retry after the owner releases the terminal.
+A delayed terminal-parser callback must not restore input readiness after its connection closes.
+The resource suite now requires a stalled browser to leave a healthy viewer receiving output through the same attachment.
+
+The acceptance runner includes this suite, for a total of 15 suites.
+The Rust screen parser retains no additional scrollback and caps incomplete render frames at 8 MiB.
+Per-browser queues cap at 32 messages and 16 MiB, plus one message in transit.
+All viewers share the backend history position. Browser text selection remains local.
+Native graphics retain the existing backend default-focus limitation.
+
+The new suite passes with Chromium 153.0.8010.12 and Firefox 157.0 on Linux.
+The resource suite passes its capacity, cleanup, and slow-viewer cases.
+The same executable passes the other twelve available local acceptance suites.
+Local browser runs use explicitly selected installed browser executables.
+The UI and terminal-persistence reruns use isolated fixture homes.
+The UI fixture uses a temporary directory on the home filesystem for its Git error expectations.
+
+The watch-capacity fixture now waits for capacity permits after cancellation, as well as descriptor cleanup.
+It retries temporary capacity responses and still requires all 64 watches within 15 seconds.
+The server watch implementation remains unchanged.
+
+The locked Rust suite passes all 43 tests, and the release build passes.
+Python discovery reports 46 passing tests and 15 platform-specific skips.
+The Rust dependency notice inventory includes the new parser and its dependencies.
+Native headed permission tests remain untested locally because `xvfb-run` is unavailable.
+The standard CI job retains that suite and runs all 15 acceptance suites.
+
+
 **Implemented, with scoped acceptance and explicit remaining limitations.** This document summarizes recorded test results, not the status of any personal deployment. Successful suites do not establish every interaction in the implementation contract. No core requirement is reclassified outside scope merely because it lacks evidence.
 
 ## Terminal wheel scrolling, November 6, 2026
@@ -18,7 +54,7 @@ no terminal input. These results do not establish physical Mac or trackpad behav
 The existing `terminal_selection.py` suite also passes all four browser/platform
 cases. The release build passes. Python discovery reports 46 passing tests and
 15 platform-specific skips. The new suite runs in the standard acceptance job,
-which now contains 14 suites. Full acceptance remains a CI gate.
+which contained 14 suites at that revision. Full acceptance remains a CI gate.
 
 ## Desktop asset upgrade — November 1, 2026
 

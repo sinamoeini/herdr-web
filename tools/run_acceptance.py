@@ -19,6 +19,7 @@ SUITES = (
     "ui",
     "terminal_selection",
     "terminal_scroll",
+    "shared_terminal",
     "graphics_browser",
     "view_edges",
     "services",
